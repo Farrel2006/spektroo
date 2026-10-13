@@ -84,7 +84,7 @@ h4{margin:0 0 6px;font-size:12px;color:var(--ac);font-weight:600}
  <div class="panel"><h4>Urutan operasi</h4><div id="prog"><i></i></div><ul id="chk"></ul></div>
  <div class="panel"><h4>Sampel &amp; kuvet</h4>
   <label class="lab">Larutan</label><select id="smp"><option value="blank">Blanko (HCl 0,1 M)</option><option value="std">Standar thiamin</option><option value="unk">Sampel thiamin (tak diketahui)</option><option value="spk">Sampel + spike</option></select>
-  <label class="lab">Konsentrasi: <b id="cv">6</b> ppm</label><input type="range" id="conc" min="0.5" max="15" step="0.5" value="6">
+  <label class="lab">Konsentrasi: <b id="cv">6</b> ppm</label><input type="range" id="conc" min="0" max="25" step="0.5" value="6">
   <div class="row" style="margin-top:8px"><button id="bLid">Buka tutup</button><button id="bCuv">Pasang kuvet</button></div>
   <p class="cap" style="margin:8px 0 0">Spektrum thiamin = data ilustratif (λmax ≈ 246 nm dalam HCl 0,1 M; verifikasi dengan SOP). Daerah UV wajib kuvet kuarsa.</p></div>
  <div class="panel"><h4>Lampu sumber</h4>
@@ -139,7 +139,7 @@ else{
 const BY=0.8, WARM=12;
 const AUTO_V='#ffb000', AUTO_D='#8a4dff';
 const S={ups:0,inst:0,pc:0,mon:0,booted:0,bootT:0,warm:0,base:0,lid:0,cuv:0,app:0,xray:0,beam:1,job:null,lam:500,sample:'blank',conc:6,spkC:2,tab:'scan',res:null,lbl:1,autoX:0,camOpt:0,lampMode:'auto',lampColor:AUTO_V,lampI:1,lmax:null,out:{}};
-S.cal={l:246,std:[2,4,6,8,10,12].map(c=>({c,a:null,sd:null})),fit:null,unk:null,spk:null};
+S.cal={l:246,std:[0,5,10,15,20,25].map(c=>({c,a:null,sd:null})),fit:null,unk:null,spk:null};
 // ---------- util
 let toastT;function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,2800)}
 function W(l){let r=0,g=0,b=0;if(l<380)return[.55,.25,1];if(l<440){r=(440-l)/60;b=1}else if(l<490){g=(l-440)/50;b=1}else if(l<510){g=1;b=(510-l)/20}else if(l<580){r=(l-510)/70;g=1}else if(l<645){r=1;g=(645-l)/65}else if(l<=780)r=1;else return[.5,.1,.1];return[r,g,b]}
@@ -451,7 +451,7 @@ $('bR').onclick=e=>{ctl.autoRotate=!ctl.autoRotate;e.target.classList.toggle('on
 $('bFS').onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>toast('Layar penuh diblokir browser.'))};$('bRe').onclick=()=>location.reload();
 $('aBase').onclick=startBase;$('aStart').onclick=start;$('aStop').onclick=()=>{S.job=null};$('aCsv').onclick=csv;$('cAll').onclick=()=>measStd(0,true);$('cFit').onclick=()=>calc(false);$('cUnk').onclick=measUnk;$('cSpk').onclick=measSpk;
 $('cClr').onclick=()=>{S.cal.std.forEach(s=>{s.a=null;s.sd=null});S.cal.fit=null;$('aU').value='';$('aSp').value='';renderConc()};
-$('cAddStd').onclick=()=>{const C=S.cal,last=C.std.length?C.std[C.std.length-1].c:0;C.std.push({c:last+2,a:null,sd:null});C.fit=null;calc(true)};
+$('cAddStd').onclick=()=>{const C=S.cal,last=C.std.length?C.std[C.std.length-1].c:0;C.std.push({c:last+5,a:null,sd:null});C.fit=null;calc(true)};
 const useL=()=>{if(S.lmax){const v=Math.round(S.lmax.l*10)/10;$('cl').value=v;$('sl').value=v;S.cal.l=v;toast('λ analisis = '+v+' nm (dari λmax scan).');drawCal()}else toast('Lakukan Scan dulu untuk mendapatkan λmax.')};
 $('bUseL').onclick=useL;$('cUseL').onclick=useL;$('cl').onchange=()=>{S.cal.l=+$('cl').value;drawCal()};
 ['massa','vol','df','tabw','aU','aSp','cAdd'].forEach(id=>$(id).oninput=()=>{S.spkC=+$('cAdd').value||0;renderRes()});
