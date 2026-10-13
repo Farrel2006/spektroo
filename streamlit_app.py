@@ -74,8 +74,8 @@ h4{margin:0 0 6px;font-size:12px;color:var(--ac);font-weight:600}
 #simpleHistorySection[hidden],#scanBox[hidden]{display:none!important}
 #simpleHistorySection{border-top:1px solid #b5b5b5;margin-top:10px;padding-top:4px}
 #chart{width:100%;height:auto;display:block;min-width:0}
-#accuracyWeightWrap{margin:7px 0;padding:6px;border:1px solid #bbb;background:#fffdf3;border-radius:5px}
-#accuracyWeightWrap[hidden]{display:none!important}
+#testWeightWrap{margin:7px 0;padding:6px;border:1px solid #bbb;background:#fffdf3;border-radius:5px}
+#testWeightWrap[hidden]{display:none!important}
 @media(max-width:900px){#app{width:96vw}#app .app-main-grid{grid-template-columns:minmax(0,1fr)}#app .controls-column{order:2}#app .graph-column{order:1}}#app button{background:#f3f3ee;color:#111;border:1px solid #777}#app button:hover{background:#fff}#app button.on{background:#cfe0ff}
 #app input{width:74px}#app input#massa{width:90px}#app table{width:100%;border-collapse:collapse;font-size:12px}#app td,#app th{border:1px solid #aaa;padding:2px 5px;text-align:right}
 #app td input{width:92px}
@@ -152,16 +152,40 @@ body.focus-animation #hud{display:none!important}
 body.focus-animation{background:#10161f}
 @media(max-width:600px){#animationFocusHud{align-items:flex-start;gap:8px;padding:8px}.focus-actions{flex-wrap:wrap;justify-content:flex-end}#animationFocusHud button{padding:6px 7px;font-size:10px}#focusProcessDetail{max-width:48vw}}
 
+
+/* Panel Concentration ditata menjadi langkah kerja yang jelas dan dapat discroll. */
+#p-conc{max-height:66vh;overflow:auto;padding:2px 5px 8px 0;color:#1e344d}
+.calc-guide{padding:9px 11px;border:1px solid #b6c9dc;border-radius:9px;background:#edf5fc;color:#294762;line-height:1.45;font-size:11px;margin:7px 0 10px}
+.calc-section{border:1px solid #c5d2df;border-radius:10px;background:#f8fbff;padding:10px;margin:8px 0;color:#1d344c;box-shadow:0 1px 2px #15304a10}
+.calc-section-title{display:flex;gap:9px;align-items:flex-start;margin:0 0 8px}
+.calc-section-number{display:grid;place-items:center;flex:none;width:25px;height:25px;border-radius:8px;background:#d8e9fa;color:#184d7a;font-weight:800;font-size:12px}
+.calc-section-title h4{margin:0 0 3px;color:#174e7b;font-size:13px;font-weight:800}
+.calc-section-title p,.calc-help{margin:0;color:#52677e;font-size:10px;line-height:1.45}
+.calc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0}
+.calc-field{display:block;color:#334d68;font-weight:700;font-size:10px;min-width:0}
+.calc-field input{width:100%!important;max-width:100%;display:block;margin-top:4px;padding:5px;border:1px solid #9dafc3;border-radius:5px;background:#fff;color:#182b40}
+.calc-formula{padding:8px;border-radius:7px;background:#eaf3e9;border:1px solid #bfdbbc;color:#2d5d31;font-size:10px;line-height:1.45;margin:8px 0}
+#testWeightSummary{overflow-x:auto;margin-top:8px}
+#testWeightSummary table{width:100%;border-collapse:collapse;font-size:10px;color:#23384c}
+#testWeightSummary th,#testWeightSummary td{border:1px solid #cfdae5;padding:4px;text-align:left;vertical-align:middle}
+#testWeightSummary th{background:#eaf1f8;color:#254661}
+#testWeightSummary input{width:82px!important;max-width:100%;padding:4px;border:1px solid #b5c3d1;border-radius:4px;background:#fff;color:#18314a}
+.nominal-ok{color:#216b3b;font-weight:700}.nominal-warn{color:#a14b16;font-weight:800}
+#testWeightWrap{margin:7px 0;padding:7px;border:1px solid #b9d0e4;background:#edf6ff;border-radius:7px}
+#testWeightWrap[hidden]{display:none!important}
+#regularSampleFields[hidden]{display:none!important}
+.calc-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.calc-actions button{margin:0}
+@media(max-width:520px){.calc-grid{grid-template-columns:1fr}#p-conc{max-height:62vh}}
+
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="welcome">
  <div class="welcome-card">
   <div class="welcome-kicker">Laboratorium Analisis Instrumental · Simulasi Edukasi</div>
   <h1>Digital Twin<br>Spektrofotometer UV-Vis</h1>
-  <p>Kenali cara kerja Agilent Cary 100 melalui simulasi interaktif. Pelajari urutan persiapan alat, zero blank menggunakan aquades, pengukuran larutan standar dan sampel, serta evaluasi kurva kalibrasi.</p>
   <div class="welcome-pills"><span>Model instrumen 3D</span><span>Zero blank aquades</span><span>Standar 0–25 ppm</span><span>Kurva kalibrasi</span></div>
   <button id="enterApp" class="cover-btn" type="button">Mulai Simulasi <span aria-hidden="true">→</span></button>
-  <div class="cover-note">Data hasil pada simulasi bersifat ilustratif dan bukan hasil pengukuran laboratorium yang tervalidasi.</div>
  </div>
 </div>
 <div id="menuWrap">
@@ -221,7 +245,7 @@ body.focus-animation{background:#10161f}
    <option value="unk">Sampel tidak diketahui</option>
   </select>
   <div id="zeroNotice">⚠ Belum melakukan Zero Blank. Pilih Aquades, siapkan kuvet, lalu klik <b>Zero Blank (Aquades)</b> sebelum mengukur larutan lain.</div>
-  <div id="accuracyWeightWrap" hidden><label class="lab" for="accuracyWeight">Bobot akurasi (g), sesuaikan dengan data praktik</label><input id="accuracyWeight" type="number" min="0.0001" step="0.0001" value="0.005" style="width:100%"><p class="cap">Nilai bobot disimpan terpisah untuk Akurasi 1–5 dan digunakan pada perhitungan massa sampel.</p></div>
+  <div id="testWeightWrap" hidden><label class="lab" id="testWeightLabel" for="testWeight">Bobot sampel uji (g)</label><input id="testWeight" type="number" min="0.0001" step="0.0001" value="0.0050" style="width:100%"><p class="cap">Bobot disimpan terpisah untuk setiap Presisi 1–5 dan Akurasi 1–5. Nilai awal masing-masing 0,0050 g; ubah sesuai hasil penimbangan praktikum.</p></div>
   <label class="lab">Konsentrasi standar aktif: <b id="cv">5</b> ppm</label><input type="range" id="conc" min="0" max="25" step="5" value="5">
   <div class="row" style="margin-top:8px"><button id="bLid">Buka tutup</button><button id="bCuv">Pasang kuvet</button></div>
   <p class="cap" style="margin:8px 0 0">Spektrum thiamin bersifat ilustratif (λmax sekitar 246 nm; verifikasi dengan SOP). Untuk daerah UV, gunakan kuvet kuarsa. Bobot Akurasi 1–5 dapat diinput sesuai data praktikum; nilai awal 0,005 g hanya contoh.</p></div>
@@ -284,21 +308,48 @@ body.focus-animation{background:#10161f}
     <div id="p-scan" style="margin:6px 0">λ awal <input id="s0" type="number" value="400"> nm &nbsp; λ akhir <input id="s1" type="number" value="200"> nm <small>(190–900; urut menurun)</small><p style="margin:5px 0;color:#314d75;font-size:11px"><b>Scan λmax hanya menggunakan standar 25 ppm.</b> Nilai λmax acuan muncul pada grafik setelah scan selesai.</p></div>
     <div id="p-simple" style="margin:6px 0" hidden>λ <input id="sl" type="number" value="246"> nm &nbsp; Replikat <input id="sn" type="number" value="3" min="1" max="10"><p class="cap">Setiap pembacaan akan ditambahkan ke Riwayat Simple Reads. Mengganti larutan tidak menghapus data sebelumnya.</p></div>
     <div id="p-conc" hidden style="margin:6px 0">
-     λ analisis <input id="cl" type="number" value="246"> nm <button id="cUseL">Pakai λmax scan</button> <small>(thiamin ≈ 246 nm dalam HCl 0,1 M)</small>
-     <div id="stdtab"></div>
-     <div style="margin-top:4px"><button id="cAddStd" disabled title="Deret standar dikunci pada 0, 5, 10, 15, 20, dan 25 ppm">Deret standar tetap 0–25 ppm</button></div>
-     <div class="bx"><b>Sampel</b><br>
-      Massa sampel <input id="massa" type="number" step="0.0001" min="0" value="2.5012"> g &nbsp;
-      Volume labu <input id="vol" type="number" step="1" min="0" value="50"> mL &nbsp;
-      Faktor pengenceran <input id="df" type="number" min="1" step="0.5" value="1"><br>
-      Absorban sampel <input id="aU" type="number" step="0.001" min="0" placeholder="otomatis / input manual"> <button id="applyLastRead" type="button" title="Pindahkan hasil sampel terakhir dari Simple Reads">Ambil hasil terakhir</button><br>
-      <small id="sampleAbsSource" style="display:block;color:#44546a;margin:3px 0 6px">Nilai absorbansi akan terisi otomatis setelah sampel dibaca pada Simple Reads. Kamu juga bisa mengetik atau mengedit nilainya secara manual.</small>
-      Bobot rata-rata 1 tablet (opsional) <input id="tabw" type="number" step="0.001" min="0" placeholder="g"></div>
-     <div class="bx"><b>Recovery (sampel + spike)</b><br>
-      Absorban sampel + spike <input id="aSp" type="number" step="0.001" min="0" placeholder="otomatis / input manual"> <button id="applyLastSpike" type="button" title="Pindahkan hasil sampel + spike terakhir">Ambil hasil terakhir</button><br>
-      <small id="spikeAbsSource" style="display:block;color:#44546a;margin:3px 0 6px">Hasil sampel + spike bisa terisi otomatis, atau dimasukkan manual.</small>
-      Konsentrasi spike yang ditambahkan <input id="cAdd" type="number" step="0.5" min="0" value="2"> ppm</div>
-     <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap"><button id="cAll">Ukur semua standar</button><button id="cFit">Hitung kurva</button><button id="cUnk">Ukur sampel</button><button id="cSpk">Ukur sampel + spike</button><button id="cClr">Hapus data kalibrasi</button></div>
+     <div class="calc-guide"><b>Urutan kerja:</b> (1) ukur deret standar dan hitung kurva, (2) ukur sampel lalu hitung kadar, (3) evaluasi presisi/akurasi memakai bobot, bukan memasukkan bobot sebagai ppm.</div>
+     <section class="calc-section">
+      <div class="calc-section-title"><span class="calc-section-number">1</span><div><h4>Kurva Kalibrasi Standar</h4><p>Gunakan standar 0, 5, 10, 15, 20, dan 25 ppm. Absorban bisa diperoleh lewat pengukuran atau diisi manual pada tabel.</p></div></div>
+      <label class="calc-field">Panjang gelombang analisis (nm)<input id="cl" type="number" value="246" min="190" max="900" step="0.1"></label>
+      <div style="margin:5px 0"><button id="cUseL">Pakai λmax hasil Scan</button> <small>(acuan awal sekitar 246 nm)</small></div>
+      <div id="stdtab"></div>
+      <div class="calc-actions"><button id="cAll">Ukur semua standar</button><button id="cFit">Hitung kurva</button><button id="cClr">Reset data kalibrasi</button><button id="cAddStd" disabled title="Deret standar tetap 0, 5, 10, 15, 20, dan 25 ppm">Standar tetap 0–25 ppm</button></div>
+      <p class="calc-help" style="margin-top:7px">Hasil bagian ini: persamaan y = ax + b, R², LOD/LOQ, serta grafik konsentrasi (X) terhadap absorbansi (Y).</p>
+     </section>
+     <section class="calc-section" id="assaySection">
+      <div class="calc-section-title"><span class="calc-section-number">2</span><div><h4>Perhitungan Kadar Sampel</h4><p>Setelah kurva dihitung, absorbansi sampel akan dikonversi menjadi konsentrasi larutan dan kadar berdasarkan volume, pengenceran, serta massa.</p></div></div>
+      <div id="regularSampleFields">
+       <div class="calc-grid">
+        <label class="calc-field">Massa sampel (g)<input id="massa" type="number" step="0.0001" min="0" value="2.5012"></label>
+        <label class="calc-field">Volume labu (mL)<input id="vol" type="number" step="1" min="0" value="50"></label>
+        <label class="calc-field">Faktor pengenceran<input id="df" type="number" min="1" step="0.5" value="1"></label>
+        <label class="calc-field">Bobot rata-rata tablet (g, opsional)<input id="tabw" type="number" step="0.001" min="0" placeholder="contoh: 0.500"></label>
+       </div>
+       <div class="calc-actions"><button id="cUnk">Ukur sampel</button></div>
+      </div>
+      <div id="weightSampleNote" class="calc-formula" hidden>Mode uji bobot aktif. Bobot, volume preparasi, dan faktor pengenceran digunakan untuk menghitung konsentrasi nominal; input massa sampel biasa disembunyikan supaya tidak tertukar.</div>
+      <label class="calc-field">Absorbansi sampel (AU)<input id="aU" type="number" step="0.001" min="0" placeholder="terisi otomatis atau ketik manual"></label>
+      <div class="calc-actions"><button id="applyLastRead" type="button" title="Pindahkan hasil sampel terakhir dari Simple Reads">Ambil hasil sampel terakhir</button></div>
+      <small id="sampleAbsSource" style="display:block;color:#52677e;margin:5px 0">Nilai otomatis diambil dari rata-rata pembacaan Simple Reads; tetap bisa diedit manual.</small>
+     </section>
+     <section class="calc-section" id="weightTestSection">
+      <div class="calc-section-title"><span class="calc-section-number">3</span><div><h4>Uji Presisi dan Akurasi Berbasis Bobot</h4><p>Larutan uji dihitung dari massa timbang dan cara preparasi. Bobot (g) bukan ppm; nilai bobot menentukan konsentrasi nominal setelah memperhitungkan volume dan pengenceran.</p></div></div>
+      <div class="calc-grid">
+       <label class="calc-field">Volume labu larutan uji (mL)<input id="testVol" type="number" min="0.1" step="1" value="50"></label>
+       <label class="calc-field">Faktor pengenceran uji<input id="testDF" type="number" min="0.1" step="0.5" value="4"></label>
+      </div>
+      <div class="calc-formula">Rumus konsentrasi nominal: <b>C (ppm) = bobot (g) × 1.000.000 ÷ [volume (mL) × faktor pengenceran]</b>. Nilai awal 0,0050 g; volume 50 mL dan pengenceran 4× memberi sekitar 25 ppm. Sesuaikan volume/pengenceran dengan prosedur praktikum aktual.</div>
+      <p class="calc-help">Edit setiap bobot di tabel ini, atau pilih Presisi/Akurasi pada menu Larutan kerja di panel kiri untuk mengedit bobot aktif. Absorbansi simulasi dihitung berdasarkan konsentrasi nominal tersebut.</p>
+      <div id="testWeightSummary"></div>
+     </section>
+     <section class="calc-section" id="recoverySection">
+      <div class="calc-section-title"><span class="calc-section-number">4</span><div><h4>Uji Recovery (Sampel + Spike)</h4><p>Bagian ini digunakan bila konsentrasi spike yang ditambahkan diketahui.</p></div></div>
+      <label class="calc-field">Absorbansi sampel + spike (AU)<input id="aSp" type="number" step="0.001" min="0" placeholder="terisi otomatis atau ketik manual"></label>
+      <div class="calc-actions"><button id="applyLastSpike" type="button" title="Pindahkan hasil sampel + spike terakhir">Ambil hasil spike terakhir</button><button id="cSpk">Ukur sampel + spike</button></div>
+      <small id="spikeAbsSource" style="display:block;color:#52677e;margin:5px 0">Nilai otomatis dari Simple Reads atau bisa dimasukkan manual.</small>
+      <label class="calc-field" style="margin-top:7px">Konsentrasi spike yang ditambahkan (ppm)<input id="cAdd" type="number" step="0.5" min="0" value="2"></label>
+     </section>
     </div>
     <div id="cres" style="margin-top:4px;font-size:12px"></div>
     <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap"><button id="aBase">Zero Blank (Aquades)</button><button id="aStart">Start</button><button id="aStop">Stop</button><button id="aCsv">Ekspor CSV</button></div>
@@ -314,7 +365,7 @@ if(typeof THREE==='undefined'){document.body.innerHTML='<p style="padding:20px">
 else{
 const BY=0.8, WARM=12;
 const AUTO_V='#ffb000', AUTO_D='#8a4dff';
-const S={ups:0,inst:0,pc:0,mon:0,booted:0,bootT:0,warm:0,base:0,lid:0,cuv:0,app:0,xray:0,beam:1,job:null,lam:500,sample:'blank',solutionKey:'aquades',conc:5,spkC:2,tab:'scan',res:null,lbl:0,autoX:0,camOpt:0,lampMode:'auto',lampColor:AUTO_V,lampI:1,lmax:null,out:{},identifyMode:0,measureVisual:0,paused:0,batchMeasuring:0,resumeAppAfterIdentify:0,appMinimized:0,opticalClock:0,visualTime:0,simpleHistory:[],lastSampleRead:null,isAutoFillingAbs:false,focusRestore:null,accuracyWeights:{akurasi_1:0.005,akurasi_2:0.005,akurasi_3:0.005,akurasi_4:0.005,akurasi_5:0.005}};
+const S={ups:0,inst:0,pc:0,mon:0,booted:0,bootT:0,warm:0,base:0,lid:0,cuv:0,app:0,xray:0,beam:1,job:null,lam:500,sample:'blank',solutionKey:'aquades',conc:5,spkC:2,tab:'scan',res:null,lbl:0,autoX:0,camOpt:0,lampMode:'auto',lampColor:AUTO_V,lampI:1,lmax:null,out:{},identifyMode:0,measureVisual:0,paused:0,batchMeasuring:0,resumeAppAfterIdentify:0,appMinimized:0,opticalClock:0,visualTime:0,simpleHistory:[],lastSampleRead:null,isAutoFillingAbs:false,focusRestore:null,testVolumeMl:50,testDilutionFactor:4,precisionWeights:{pres_1:0.0050,pres_2:0.0050,pres_3:0.0050,pres_4:0.0050,pres_5:0.0050},accuracyWeights:{akurasi_1:0.0050,akurasi_2:0.0050,akurasi_3:0.0050,akurasi_4:0.0050,akurasi_5:0.0050}};
 const DATA_LMAX_NM=246.0; // Nilai acuan dari model/data yang sudah dipakai. Ubah sesuai hasil praktikum aktual.
 S.cal={l:246,std:[0,5,10,15,20,25].map(c=>({c,a:null,sd:null})),fit:null,unk:null,spk:null};
 // ---------- util
@@ -324,7 +375,12 @@ const G=(l,m,s)=>Math.exp(-.5*((l-m)/s)**2);
 // Thiamin HCl dalam HCl 0,1 M (ILUSTRATIF): puncak ~246 nm, A1%1cm ~410 -> ~0,0395 Abs per ppm
 const THI=(l,c)=>c*.0395*(G(l,246,12.5)+.10*G(l,272,16)+.9*G(l,205,11));
 const UNK=7.35;
-function specA(l){const s=S.sample;let c=0;if(s==='std')c=S.conc;else if(s==='unk'){const k=S.solutionKey||'pres_1';const offsets=[-.012,.006,.002,-.009,.013];const ix=k.startsWith('pres_')?Math.max(0,Math.min(4,parseInt(k.split('_')[1],10)-1)):-1;c=ix>=0?UNK*(1+offsets[ix]):UNK}else if(s==='spk')c=UNK+S.spkC*.97;return Math.min(3.5,THI(l,c))}
+function testWeightForKey(key){if((key||'').startsWith('pres_'))return Number(S.precisionWeights[key]??0.0050);if((key||'').startsWith('akurasi_'))return Number(S.accuracyWeights[key]??0.0050);return NaN}
+function testVolumeMl(){const v=+$('testVol')?.value||S.testVolumeMl||50;return v>0?v:50}
+function testDilutionFactor(){const d=+$('testDF')?.value||S.testDilutionFactor||4;return d>0?d:4}
+function nominalTestConcentrationPPM(key){const w=testWeightForKey(key),v=testVolumeMl(),df=testDilutionFactor();return Number.isFinite(w)&&w>0&&v>0&&df>0?w*1000000/(v*df):NaN}
+function testMassFoundMg(abs,fit,volumeMl,dilution){if(!fit||!Number.isFinite(abs)||Math.abs(fit.a)<1e-12)return NaN;const measuredC=(abs-fit.b)/fit.a;return measuredC*(dilution||testDilutionFactor())*((volumeMl||testVolumeMl())/1000)}
+function specA(l){const s=S.sample;let c=0;if(s==='std')c=S.conc;else if(s==='unk'){const k=S.solutionKey||'pres_1';if(k.startsWith('pres_')||k.startsWith('akurasi_')){c=nominalTestConcentrationPPM(k);if(k.startsWith('pres_')){const offsets=[-.012,.006,.002,-.009,.013];const ix=Math.max(0,Math.min(4,parseInt(k.split('_')[1],10)-1));c*=1+offsets[ix]}}else c=UNK}else if(s==='spk')c=UNK+S.spkC*.97;return Math.min(3.5,THI(l,Number.isFinite(c)?Math.max(0,c):0))}
 const noise=()=>(Math.random()-.5)*.004;
 const readA=l=>Math.max(0,(S.cuv?specA(l):0)+noise());
 // ---------- scene
@@ -669,7 +725,7 @@ function startJob(job){enterAnimationFocus();S.identifyMode=0;S.lbl=0;S.xray=0;$
 function finishJob(){S.job=null;S.paused=0;S.measureVisual=!!S.batchMeasuring;syncX();syncProcessButtons()}
 function startBase(){if(S.base){toast('Zero Blank sudah berhasil dilakukan. Proses ini hanya dilakukan satu kali per sesi.');return}const e=pre();if(e){toast(e);return}if($('smp').value!=='aquades'){toast('Pilih Aquades sebagai larutan kerja untuk Zero Blank.');return}setSample('blank');startJob({type:'base',l:S.lam,stop:S.lam,rate:0,t:0})}
 function start(){if(S.job||S.batchMeasuring){toast('Pengukuran sedang berjalan. Jeda atau hentikan sebelum memulai proses baru.');return}if(S.tab==='conc'){toast('Gunakan tombol Ukur / Ukur semua standar / Ukur sampel.');return}if(S.tab==='scan'){const e=pre();if(e){toast(e);return}if(!S.base){toast('Belum melakukan Zero Blank. Pilih aquades lalu tekan Zero Blank (Aquades).');return}if(S.solutionKey!=='std_25'||S.sample!=='std'||Number(S.conc)!==25){toast('Scan panjang gelombang hanya dapat dilakukan menggunakan Standar 25 ppm.');return}const r=range();if(!r)return;S.res={type:'scan',pts:[]};S.lmax=null;startJob({type:'scan',l:r[0],start:r[0],stop:r[1],rate:(r[1]-r[0])/8,last:r[0]+1,pts:S.res.pts});}
- else{const e=pre();if(e){toast(e);return}if(!S.base){toast('Belum melakukan Zero Blank. Pilih aquades lalu tekan Zero Blank (Aquades).');return}const l=+$('sl').value,n=Math.max(1,Math.min(10,+$('sn').value|0));if(!(l>=190&&l<=900)){toast('λ harus 190–900 nm.');return}S.lam=l;const selected=$('smp').options[$('smp').selectedIndex];const key=S.solutionKey||'aquades';const weight=key.startsWith('akurasi_')?(S.accuracyWeights[key]??0.005):null;const concentration=key.startsWith('std_')?Number(key.split('_')[1]):null;S.res={type:'simple',rows:[]};startJob({type:'simple',l,n,i:0,t:0,solutionKey:key,solutionLabel:selected?selected.textContent.trim():key,concentration,weight});}
+ else{const e=pre();if(e){toast(e);return}if(!S.base){toast('Belum melakukan Zero Blank. Pilih aquades lalu tekan Zero Blank (Aquades).');return}const l=+$('sl').value,n=Math.max(1,Math.min(10,+$('sn').value|0));if(!(l>=190&&l<=900)){toast('λ harus 190–900 nm.');return}S.lam=l;const selected=$('smp').options[$('smp').selectedIndex];const key=S.solutionKey||'aquades';const isWeightTest=key.startsWith('pres_')||key.startsWith('akurasi_');const weight=isWeightTest?testWeightForKey(key):null;const concentration=key.startsWith('std_')?Number(key.split('_')[1]):(isWeightTest?nominalTestConcentrationPPM(key):null);const prepVolumeMl=isWeightTest?testVolumeMl():null,prepDilutionFactor=isWeightTest?testDilutionFactor():null;S.res={type:'simple',rows:[]};startJob({type:'simple',l,n,i:0,t:0,solutionKey:key,solutionLabel:selected?selected.textContent.trim():key,concentration,weight,prepVolumeMl,prepDilutionFactor});}
  if(S.job&&!S.camOpt){S.camOpt=1;flyV('opt')}}
 function setAbsorbanceValue(id,value,sourceText){
  const input=$(id);if(!input)return;S.isAutoFillingAbs=true;input.value=Number(value).toFixed(4);S.isAutoFillingAbs=false;
@@ -690,9 +746,9 @@ function runJob(dt){const j=S.job;if(!j||S.paused)return;
  else if(j.type==='base'){j.t=(j.t||0)+dt;S.lam=j.l;if(j.t>=1){S.base=1;finishJob();S.solutionKey='aquades';setSample('blank');updateSolutionGate();toast('Zero Blank aquades berhasil. Larutan lain kini dapat dipilih; Zero Blank tidak dapat diulang pada sesi ini.')}}
  else if(j.type==='scan'){const next=j.l+j.rate*dt;j.l=j.rate>=0?Math.min(j.stop,next):Math.max(j.stop,next);S.lam=j.l;if(Math.abs(j.l-j.last)>=1){j.last=j.l;j.pts.push([j.l,readA(j.l)])}
   const reached=j.rate>=0?j.l>=j.stop:j.l<=j.stop;if(reached){finishJob();toast('Scan selesai. λmax acuan data = '+DATA_LMAX_NM.toFixed(1)+' nm.')}}
- else{j.t+=dt;if(j.t>=1.2){j.t=0;const a=readA(j.l),pct=100*Math.pow(10,-a);j.i++;S.res.rows.push([j.i,j.l,a,pct]);S.simpleHistory.push({no:S.simpleHistory.length+1,solution:j.solutionLabel||j.solutionKey||'Larutan',key:j.solutionKey||'',concentration:j.concentration,weight:j.weight,replicate:j.i,lambda:j.l,abs:a,transmittance:pct});drawTable();if(j.i>=j.n){
+ else{j.t+=dt;if(j.t>=1.2){j.t=0;const a=readA(j.l),pct=100*Math.pow(10,-a);j.i++;S.res.rows.push([j.i,j.l,a,pct]);S.simpleHistory.push({no:S.simpleHistory.length+1,solution:j.solutionLabel||j.solutionKey||'Larutan',key:j.solutionKey||'',concentration:j.concentration,weight:j.weight,prepVolumeMl:j.prepVolumeMl,prepDilutionFactor:j.prepDilutionFactor,replicate:j.i,lambda:j.l,abs:a,transmittance:pct});drawTable();if(j.i>=j.n){
   const measuredRows=S.simpleHistory.slice(-j.n),avgAbs=measuredRows.reduce((sum,row)=>sum+row.abs,0)/Math.max(1,measuredRows.length);
-  S.lastSampleRead={key:j.solutionKey||'',solution:j.solutionLabel||j.solutionKey||'Larutan',absorbance:avgAbs,replicates:measuredRows.length,concentration:j.concentration,weight:j.weight,lambda:j.l};
+  S.lastSampleRead={key:j.solutionKey||'',solution:j.solutionLabel||j.solutionKey||'Larutan',absorbance:avgAbs,replicates:measuredRows.length,concentration:j.concentration,weight:j.weight,prepVolumeMl:j.prepVolumeMl,prepDilutionFactor:j.prepDilutionFactor,lambda:j.l};
   finishJob();
   const k=S.lastSampleRead.key;
   if(k==='unk'||k.startsWith('pres_')||k.startsWith('akurasi_')){
@@ -747,24 +803,46 @@ function renderStd(){const C=S.cal;let t='<table><tr><th>No</th><th>Konsentrasi 
  $('stdtab').querySelectorAll('input').forEach(e=>e.onchange=()=>{const s=C.std[+e.dataset.i];if(e.dataset.k==='c'){s.c=+e.value;s.a=null;s.sd=null}else{const v=parseFloat(e.value);s.a=isFinite(v)?v:null;s.sd=null}C.fit=null;calc(true)});
  $('stdtab').querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>measStd(+b.dataset.m,false));
  $('stdtab').querySelectorAll('button[data-d]').forEach(b=>b.onclick=()=>{C.std.splice(+b.dataset.d,1);C.fit=null;calc(true)})}
-function renderRes(){const C=S.cal,f=C.fit;let r='';C.unk=null;C.spk=null;S.out={};
- if(f)r+=`<b>Persamaan:</b> y = ${f.a.toFixed(5)}x ${f.b<0?'−':'+'} ${Math.abs(f.b).toFixed(5)}<br><b>R²</b> = ${f.r2.toFixed(5)} ${f.r2>=.995?'✔ baik':'⚠ di bawah 0,995, periksa standar'}<br>LOD ≈ ${f.lod.toFixed(3)} ppm, LOQ ≈ ${f.loq.toFixed(3)} ppm (3,3·s/a dan 10·s/a)`;
- else r+='Kalibrasi belum ada: isi atau ukur minimal 3 standar, lalu <b>Hitung kurva</b>.';
- const A=parseFloat($('aU').value);
- if(f&&isFinite(A)){const df=Math.max(1,+$('df').value||1),V=+$('vol').value,m=+$('massa').value,tw=+$('tabw').value;
-  const c=(A-f.b)/f.a,cA=c*df;C.unk={A,c,df};S.out.c=c;S.out.cA=cA;
-  const aa=C.std.filter(s=>s.a!=null).map(s=>s.a),rng=A>=Math.min(...aa)*.999&&A<=Math.max(...aa)*1.001;
-  r+=`<hr><b>Sampel:</b> Abs = ${A.toFixed(4)} (%T = ${(100*Math.pow(10,-A)).toFixed(2)})<br>C terukur = ${c.toFixed(3)} ppm → C larutan asli = <b>${cA.toFixed(3)} ppm</b> (FP ${df})<br>`;
-  if(V>0&&m>0){const mgg=cA*(V/1000)/m;S.out.mgg=mgg;r+=`<b>Kadar = ${mgg.toFixed(4)} mg/g</b> = ${(mgg*100).toFixed(2)} mg/100 g = ${(mgg*1000).toFixed(1)} mg/kg<br>`;if(tw>0)r+=`≈ ${(mgg*tw).toFixed(3)} mg/tablet (bobot rata-rata ${tw} g)<br>`;r+=`<small>Kadar = C × FP × V ÷ massa</small><br>`}
-  else r+='<span style="color:#b00">Isi massa sampel dan volume labu untuk menghitung kadar.</span><br>';
-  r+=rng?'✔ Abs sampel di dalam rentang kurva':'⚠ Abs sampel di luar rentang kurva: encerkan atau ulangi';
-  const Asp=parseFloat($('aSp').value),add=+$('cAdd').value;
-  if(isFinite(Asp)&&add>0){const cs=(Asp-f.b)/f.a,rec=(cs-c)/add*100;C.spk={A:Asp,c:cs};S.out.rec=rec;const ok=rec>=80&&rec<=120;
-   r+=`<hr><b>Recovery:</b> C sampel+spike = ${cs.toFixed(3)} ppm, C sampel = ${c.toFixed(3)} ppm, spike ditambahkan = ${add} ppm<br><b>% Recovery = ${rec.toFixed(2)} %</b> ${ok?'<span style="color:#1b7a2b">✔ dalam rentang 80–120%</span>':'<span style="color:#b00">⚠ di luar 80–120%</span>'}<br><small>%R = (C sampel+spike − C sampel) ÷ C spike × 100</small>`}
-  else r+='<hr>Recovery: isi absorban sampel + spike dan konsentrasi spike (atau klik Ukur sampel + spike).';
- }else if(f)r+='<hr>Isi absorban sampel (atau klik Ukur sampel) untuk menghitung kadar.';
- $('cres').innerHTML=r;drawCal()}
-function renderConc(){renderStd();renderRes()}
+function renderRes(){
+ const C=S.cal,f=C.fit,key=S.solutionKey||'';let r='';C.unk=null;C.spk=null;S.out={};
+ if(f)r+=`<div class="calc-formula"><b>Persamaan kalibrasi:</b> A = ${f.a.toFixed(5)} × C ${f.b<0?'−':'+'} ${Math.abs(f.b).toFixed(5)}<br><b>R²</b> = ${f.r2.toFixed(5)} ${f.r2>=.995?'✔ memenuhi indikator simulasi ≥ 0,995':'⚠ periksa data standar dan rentang kurva'}<br>LOD ≈ ${f.lod.toFixed(3)} ppm · LOQ ≈ ${f.loq.toFixed(3)} ppm</div>`;
+ else r+='<div class="calc-formula">Kurva belum dihitung. Ukur/isi absorbansi standar, minimal tiga konsentrasi yang berbeda, lalu tekan <b>Hitung kurva</b>.</div>';
+ const A=parseFloat($('aU').value),isPrecision=key.startsWith('pres_'),isAccuracy=key.startsWith('akurasi_'),isWeightTest=isPrecision||isAccuracy;
+ if(f&&Number.isFinite(A)){
+  const c=(A-f.b)/f.a;S.out.c=c;C.unk={A,c,df:1};
+  const measuredStd=C.std.filter(s=>s.a!=null&&Number.isFinite(s.c));
+  const amin=measuredStd.length?Math.min(...measuredStd.map(s=>s.a)):NaN,amax=measuredStd.length?Math.max(...measuredStd.map(s=>s.a)):NaN;
+  const inRange=Number.isFinite(amin)&&A>=amin-.0005&&A<=amax+.0005;
+  if(isWeightTest){
+   const weight=testWeightForKey(key),weightMg=weight*1000,volume=testVolumeMl(),dilution=testDilutionFactor(),cNominal=nominalTestConcentrationPPM(key),foundMg=testMassFoundMg(A,f,volume,dilution),ratio=weightMg>0?foundMg/weightMg*100:NaN;
+   S.out.cA=c*dilution;S.out.mgFound=foundMg;S.out.weight=weight;S.out.testAccuracy=ratio;
+   r+=`<section class="calc-section"><div class="calc-section-title"><span class="calc-section-number">${isPrecision?'P':'A'}</span><div><h4>${isPrecision?'Hasil Uji Presisi':'Hasil Uji Akurasi'}</h4><p>Perhitungan memakai bobot dan preparasi larutan uji, bukan memperlakukan bobot sebagai ppm.</p></div></div>`;
+   r+=`Bobot sampel = <b>${weight.toFixed(4)} g</b> (${weightMg.toFixed(2)} mg)<br>Volume labu = <b>${volume.toFixed(1)} mL</b> · Faktor pengenceran = <b>${dilution.toFixed(3)}×</b><br>Konsentrasi nominal dari bobot = <b>${cNominal.toFixed(3)} ppm</b><br>Absorbansi terukur = <b>${A.toFixed(4)} AU</b><br>Konsentrasi terukur dari kurva = <b>${c.toFixed(3)} ppm</b><br>Massa analit terhitung = <b>${foundMg.toFixed(4)} mg</b><br>`;
+   if(isAccuracy){r+=`Massa acuan dari bobot = <b>${weightMg.toFixed(4)} mg</b><br><b>Perolehan kembali relatif bobot = ${ratio.toFixed(2)}%</b> ${ratio>=80&&ratio<=120?'<span style="color:#216b3b">(dalam rentang cek ilustratif 80–120%)</span>':'<span style="color:#a14b16">(di luar rentang cek ilustratif 80–120%)</span>'}<br><small>Rumus = massa analit terhitung ÷ massa acuan × 100%. Asumsi bobot merupakan analit target; jika sampel campuran, gunakan nilai teoritis analit sesuai SOP.</small>`;}
+   else{
+    const presRows=(S.simpleHistory||[]).filter(row=>String(row.key||'').startsWith('pres_')&&Number.isFinite(row.abs));
+    const amounts=presRows.map(row=>testMassFoundMg(row.abs,f,row.prepVolumeMl||volume,row.prepDilutionFactor||dilution)).filter(Number.isFinite);
+    if(amounts.length>=2){const avg=amounts.reduce((s,v)=>s+v,0)/amounts.length;const sd=Math.sqrt(amounts.reduce((s,v)=>s+(v-avg)**2,0)/(amounts.length-1));const rsd=avg!==0?sd/Math.abs(avg)*100:NaN;S.out.precisionRSD=rsd;r+=`<hr><b>Ringkasan presisi seluruh hasil Presisi 1–5:</b> n = ${amounts.length}; rata-rata massa terhitung = ${avg.toFixed(4)} mg; SD = ${sd.toFixed(5)} mg; <b>%RSD = ${rsd.toFixed(3)}%</b>.<br><small>%RSD = SD ÷ rata-rata × 100%. Ukur Presisi 1–5 pada kondisi preparasi yang sama sebelum menilai keterulangan.</small>`}
+    else r+='<hr>Ringkasan %RSD akan muncul setelah minimal dua hasil Presisi 1–5 masuk ke riwayat Simple Reads.';
+   }
+   r+=`<hr><small>Rumus konsentrasi nominal: bobot (g) × 1.000.000 ÷ [volume (mL) × faktor pengenceran]. Target kurva standar adalah 0–25 ppm. ${cNominal>25?'⚠ Konsentrasi nominal di atas 25 ppm: sesuaikan volume/pengenceran sesuai SOP atau ukur di rentang kalibrasi yang tervalidasi.':cNominal<0?'⚠ Konsentrasi nominal tidak valid.':''}</small></section>`;
+   const aa=measuredStd.map(s=>s.a);r+=inRange?'✔ Absorbansi berada dalam rentang absorbansi standar.':'⚠ Absorbansi di luar rentang standar terukur; hasil ekstrapolasi perlu dihindari.';
+  }else{
+   const df=Math.max(1,+$('df').value||1),V=+$('vol').value,m=+$('massa').value,tw=+$('tabw').value,cA=c*df;C.unk={A,c,df};S.out.cA=cA;
+   r+=`<section class="calc-section"><div class="calc-section-title"><span class="calc-section-number">S</span><div><h4>Hasil Kadar Sampel</h4><p>Absorbansi dikonversi memakai persamaan kurva kalibrasi.</p></div></div>`;
+   r+=`Absorbansi = <b>${A.toFixed(4)} AU</b> · %T = <b>${(100*Math.pow(10,-A)).toFixed(2)}%</b><br>Konsentrasi terukur = <b>${c.toFixed(3)} ppm</b><br>Konsentrasi setelah faktor pengenceran = <b>${cA.toFixed(3)} ppm</b> (FP ${df})<br>`;
+   if(V>0&&m>0){const mgg=cA*(V/1000)/m;S.out.mgg=mgg;r+=`<b>Kadar = ${mgg.toFixed(4)} mg/g</b> = ${(mgg*100).toFixed(2)} mg/100 g = ${(mgg*1000).toFixed(1)} mg/kg<br>`;if(tw>0)r+=`≈ ${(mgg*tw).toFixed(3)} mg/tablet (bobot rata-rata ${tw} g)<br>`;r+=`<small>Kadar (mg/g) = C (mg/L) × FP × V (L) ÷ massa sampel (g).</small><br>`}
+   else r+='<span style="color:#a14b16">Isi massa sampel dan volume labu dengan nilai sesuai preparasi.</span><br>';
+   r+=inRange?'✔ Absorbansi berada dalam rentang standar terukur.':'⚠ Absorbansi di luar rentang standar terukur; encerkan/siapkan ulang sesuai SOP.';
+   const Asp=parseFloat($('aSp').value),add=+$('cAdd').value;
+   if(Number.isFinite(Asp)&&add>0){const cs=(Asp-f.b)/f.a,rec=(cs-c)/add*100;C.spk={A:Asp,c:cs};S.out.rec=rec;r+=`<hr><b>Recovery spike:</b> C sampel + spike = ${cs.toFixed(3)} ppm; C sampel = ${c.toFixed(3)} ppm; spike = ${add.toFixed(3)} ppm.<br><b>% Recovery = ${rec.toFixed(2)}%</b> (${rec>=80&&rec<=120?'dalam rentang cek ilustratif 80–120%':'di luar rentang cek ilustratif 80–120%'}).<br><small>%Recovery = (C sampel+spike − C sampel) ÷ C spike × 100.</small>`}
+   else r+='<hr>Recovery spike: ukur sampel + spike atau isi absorbansinya dan konsentrasi spike.';
+   r+='</section>';
+  }
+ }else if(f){r+='<div class="calc-section">Absorbansi belum tersedia. Ukur sampel melalui Simple Reads atau masukkan nilai secara manual.</div>'}
+ $('cres').innerHTML=r;drawCal();updateWeightNominalCells()}
+function renderConc(){renderStd();renderRes();updateTestWeightSummary()}
+
 function drawCal(){const c=$('chart'),g=c.getContext('2d'),w=c.width,h=c.height;g.fillStyle='#fff';g.fillRect(0,0,w,h);const C=S.cal,p=C.std.filter(s=>s.a!=null);
  const xm=Math.max(12,...C.std.map(s=>s.c),C.unk?C.unk.c:0,C.spk?C.spk.c:0)*1.1,ym=Math.max(.5,...p.map(s=>s.a),C.unk?C.unk.A:0,C.spk?C.spk.A:0)*1.2;const X=v=>55+v/xm*(w-70),Y=v=>h-34-v/ym*(h-56);
  g.font='11px sans-serif';g.lineWidth=1;for(let i=0;i<=5;i++){const xv=xm*i/5,yv=ym*i/5;g.strokeStyle='#e6e6e6';g.beginPath();g.moveTo(X(xv),20);g.lineTo(X(xv),h-34);g.moveTo(55,Y(yv));g.lineTo(w-15,Y(yv));g.stroke();g.fillStyle='#333';g.fillText(xv.toFixed(1),X(xv)-8,h-20);g.fillText(yv.toFixed(2),16,Y(yv)+4)}
@@ -828,8 +906,10 @@ function renderUI(){document.querySelectorAll('#p-conc button').forEach(b=>b.dis
  $('hud').innerHTML='';
 }
 function syncX(){const transparent=!!(S.xray||S.identifyMode||S.measureVisual);shells.forEach(s=>{s.m.raycast=(transparent&&!s.keep)?()=>{}:THREE.Mesh.prototype.raycast})}
-function updateAccuracyWeightUI(key){const k=key||S.solutionKey||'';const wrap=$('accuracyWeightWrap');if(!wrap)return;const isAccuracy=k.startsWith('akurasi_');wrap.hidden=!isAccuracy;if(isAccuracy){const w=S.accuracyWeights[k]??0.005;$('accuracyWeight').value=w;$('massa').value=w;}}
-function updateSolutionGate(){const sel=$('smp');if(!sel)return;updateAccuracyWeightUI(S.solutionKey);
+function updateTestWeightUI(key){const k=key||S.solutionKey||'';const wrap=$('testWeightWrap');if(!wrap)return;const isPrecision=k.startsWith('pres_'),isAccuracy=k.startsWith('akurasi_'),isWeightTest=isPrecision||isAccuracy;wrap.hidden=!isWeightTest;$('regularSampleFields').hidden=isWeightTest;$('weightSampleNote').hidden=!isWeightTest;if(!isWeightTest)return;const w=testWeightForKey(k);$('testWeightLabel').textContent=(isPrecision?'Bobot sampel Presisi (g)':'Bobot sampel Akurasi (g)')+' · '+k.replace('_',' ').replace(/^(pres|akurasi)/,m=>m==='pres'?'Presisi':'Akurasi');$('testWeight').value=(Number.isFinite(w)?w:0.0050).toFixed(4);$('massa').value=(Number.isFinite(w)?w:0.0050);}
+function updateTestWeightSummary(){const el=$('testWeightSummary');if(!el)return;let t='<table><thead><tr><th>Uji</th><th>Bobot (g)</th><th>Konsentrasi nominal (ppm)</th></tr></thead><tbody>';for(let i=1;i<=5;i++){const pk='pres_'+i,ak='akurasi_'+i;for(const [key,label,cls] of [[pk,'Presisi '+i,'pres'],[ak,'Akurasi '+i,'akurasi']]){const w=testWeightForKey(key),c=nominalTestConcentrationPPM(key),ok=Number.isFinite(c)&&c>=0&&c<=25;t+=`<tr><td>${label}</td><td><input data-weight-key="${key}" type="number" min="0.0001" step="0.0001" value="${(Number.isFinite(w)?w:0.0050).toFixed(4)}" aria-label="Bobot ${label} (g)"></td><td data-nominal-key="${key}" class="${ok?'nominal-ok':'nominal-warn'}">${Number.isFinite(c)?c.toFixed(3):'—'}${ok?'':' ⚠'}</td></tr>`}}t+='</tbody></table>';el.innerHTML=t;el.querySelectorAll('input[data-weight-key]').forEach(input=>{input.addEventListener('input',()=>{const key=input.dataset.weightKey,v=parseFloat(input.value);if(!Number.isFinite(v)||v<=0)return;if(key.startsWith('pres_'))S.precisionWeights[key]=v;else S.accuracyWeights[key]=v;if(S.solutionKey===key){$('testWeight').value=v.toFixed(4);$('massa').value=v}updateWeightNominalCells();renderRes()})});updateWeightNominalCells()}
+function updateWeightNominalCells(){const volume=testVolumeMl(),df=testDilutionFactor();S.testVolumeMl=volume;S.testDilutionFactor=df;document.querySelectorAll('[data-nominal-key]').forEach(cell=>{const key=cell.dataset.nominalKey,c=nominalTestConcentrationPPM(key),ok=Number.isFinite(c)&&c>=0&&c<=25;cell.textContent=Number.isFinite(c)?c.toFixed(3)+(ok?'':' ⚠ di luar 0–25'): '—';cell.classList.toggle('nominal-ok',ok);cell.classList.toggle('nominal-warn',!ok)});}
+function updateSolutionGate(){const sel=$('smp');if(!sel)return;updateTestWeightUI(S.solutionKey);
  if(!S.base){if(sel.value!=='aquades'){sel.value='aquades';S.solutionKey='aquades';S.sample='blank';$('conc').disabled=true;setLiq()}}
  else if(S.tab==='scan'&&sel.value!=='std_25'){sel.value='std_25';S.solutionKey='std_25';S.sample='std';S.conc=25;$('conc').value=25;$('cv').textContent='25';setLiq()}
  Array.from(sel.options).forEach(o=>{o.disabled=!S.base?o.value!=='aquades':(S.tab==='scan'?o.value!=='std_25':false)});
@@ -838,9 +918,9 @@ function updateSolutionGate(){const sel=$('smp');if(!sel)return;updateAccuracyWe
  }
 $('smp').onchange=e=>{const key=e.target.value;S.solutionKey=key;S.spkC=+$('cAdd').value||0;if(key==='aquades'){S.sample='blank';S.conc=0;$('cv').textContent='0';$('conc').value=0;$('conc').disabled=true}
  else if(key.startsWith('std_')){S.sample='std';S.conc=Number(key.split('_')[1]);$('conc').value=S.conc;$('cv').textContent=S.conc;$('conc').disabled=false}
- else if(key.startsWith('pres_')||key.startsWith('akurasi_')||key==='unk'){S.sample='unk';$('conc').disabled=true;if(key.startsWith('akurasi_')){const w=S.accuracyWeights[key]??0.005;$('accuracyWeight').value=w;$('massa').value=w;}}
+ else if(key.startsWith('pres_')||key.startsWith('akurasi_')||key==='unk'){S.sample='unk';$('conc').disabled=true;if(key.startsWith('pres_')||key.startsWith('akurasi_'))$('massa').value=testWeightForKey(key);}
  else if(key==='spike'){S.sample='spk';$('conc').disabled=true}
- setLiq();if(!S.base&&key!=='aquades'){e.target.value='aquades';S.sample='blank';S.solutionKey='aquades';toast('Lakukan Zero Blank dengan aquades terlebih dahulu.')}updateAccuracyWeightUI(S.solutionKey);updateSolutionGate()};
+ setLiq();if(!S.base&&key!=='aquades'){e.target.value='aquades';S.sample='blank';S.solutionKey='aquades';toast('Lakukan Zero Blank dengan aquades terlebih dahulu.')}updateTestWeightUI(S.solutionKey);updateSolutionGate()};
 $('conc').oninput=e=>{S.conc=+e.target.value;$('cv').textContent=S.conc;S.sample='std';S.solutionKey='std_'+String(Number(S.conc));$('smp').value=S.solutionKey;setLiq()};
 $('bLid').onclick=toggleLid;$('bCuv').onclick=toggleCuv;
 $('bX').onclick=()=>{
@@ -863,8 +943,9 @@ $('aU').addEventListener('change',()=>{if(!S.isAutoFillingAbs&&$('sampleAbsSourc
 $('aSp').addEventListener('change',()=>{if(!S.isAutoFillingAbs&&$('spikeAbsSource'))$('spikeAbsSource').textContent='Nilai absorbansi sampel + spike diinput atau diedit manual.'});
 $('applyLastRead').onclick=applyLastSimpleRead;
 $('applyLastSpike').onclick=()=>{const r=S.lastSampleRead;if(!r||r.key!=='spike'){toast('Belum ada pembacaan sampel + spike terakhir. Ukur sampel + spike pada Simple Reads dahulu.');return}applyLastSimpleRead()};
-$('accuracyWeight').oninput=()=>{const key=S.solutionKey||'';const value=parseFloat($('accuracyWeight').value);if(key.startsWith('akurasi_')&&isFinite(value)&&value>0){S.accuracyWeights[key]=value;$('massa').value=value;renderRes()}};
-$('massa').addEventListener('change',()=>{const key=S.solutionKey||'';const value=parseFloat($('massa').value);if(key.startsWith('akurasi_')&&isFinite(value)&&value>0){S.accuracyWeights[key]=value;$('accuracyWeight').value=value}});
+$('testWeight').oninput=()=>{const key=S.solutionKey||'',value=parseFloat($('testWeight').value);if(!Number.isFinite(value)||value<=0)return;if(key.startsWith('pres_'))S.precisionWeights[key]=value;else if(key.startsWith('akurasi_'))S.accuracyWeights[key]=value;else return;$('massa').value=value;const tableInput=$('testWeightSummary').querySelector(`[data-weight-key="${key}"]`);if(tableInput&&document.activeElement!==tableInput)tableInput.value=value.toFixed(4);updateWeightNominalCells();renderRes()};
+$('massa').addEventListener('change',()=>{const key=S.solutionKey||'',value=parseFloat($('massa').value);if((key.startsWith('pres_')||key.startsWith('akurasi_'))&&Number.isFinite(value)&&value>0){if(key.startsWith('pres_'))S.precisionWeights[key]=value;else S.accuracyWeights[key]=value;$('testWeight').value=value.toFixed(4);const tableInput=$('testWeightSummary').querySelector(`[data-weight-key="${key}"]`);if(tableInput)tableInput.value=value.toFixed(4);updateWeightNominalCells()}});
+['testVol','testDF'].forEach(id=>$(id).addEventListener('input',()=>{S.testVolumeMl=testVolumeMl();S.testDilutionFactor=testDilutionFactor();updateWeightNominalCells();renderRes()}));
 $('aRefresh').onclick=()=>{if(S.job||S.batchMeasuring){toast('Jeda atau hentikan pengukuran sebelum mereset tabel.');return}S.simpleHistory=[];drawTable();toast('Riwayat Simple Reads telah direset. Data kalibrasi tidak dihapus.')};
 $('bL').onclick=()=>{if(!S.identifyMode){toast('Aktifkan Transparan atau Kenali Bagian terlebih dahulu.');return}S.lbl=S.lbl?0:1;$('bL').classList.toggle('on',!!S.lbl);if(S.lbl)showIdentifyGuide()};
 $('focusPause').onclick=()=>{$('bPause').click()};
@@ -950,7 +1031,7 @@ ren.domElement.addEventListener('pointermove',e=>{ren.domElement.style.cursor=pi
 function resize(){const rect=ren.domElement.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height);ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 // ---------- loop
 const B={vis:0,T:1,sOn:true};const clk=new THREE.Clock();let xk=0,uiT=0,chA=0,lastLamp=0;const col=new THREE.Color(),beamCol=new THREE.Color(),tA=new THREE.Color(),tB=new THREE.Color();
-setLiq();syncX();$('animationFocusHud').hidden=true;$('conc').disabled=true;$('opticalStatus').hidden=true;$('cres').hidden=true;$('simpleHistorySection').hidden=true;$('graphHeading').textContent='Spektrum: Panjang gelombang (nm) dan absorbansi';updatePanelToggleUI();updateAccuracyWeightUI(S.solutionKey);updateSolutionGate();syncProcessButtons();drawTable();
+setLiq();syncX();$('animationFocusHud').hidden=true;$('conc').disabled=true;$('opticalStatus').hidden=true;$('cres').hidden=true;$('simpleHistorySection').hidden=true;$('graphHeading').textContent='Spektrum: Panjang gelombang (nm) dan absorbansi';updatePanelToggleUI();updateTestWeightUI(S.solutionKey);updateSolutionGate();syncProcessButtons();drawTable();
 function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1);const animDt=S.paused?0:dt;if(!S.paused)S.visualTime+=dt;const visualMs=S.visualTime*1000;
  if(S.inst)S.warm=Math.min(WARM,S.warm+animDt);if(S.pc&&!S.booted){S.bootT+=animDt;if(S.bootT>4)S.booted=1}
  runJob(animDt);syncAnimationFocus();
@@ -1008,6 +1089,7 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1)
  drawScreen();updLb();drawSch();if(S.focusRestore)syncAnimationFocusHUD();uiT+=dt;if(uiT>.15){uiT=0;renderUI();renderOpticalStatus();if(S.app&&!S.appMinimized){if(S.tab==='scan'||S.tab==='conc'||S.job)drawChart();if(S.tab==='simple')drawTable()}}
  ren.render(scene,cam)}
 renderConc();
+updateTestWeightSummary();
 loop();
 }
 </script></body></html>
