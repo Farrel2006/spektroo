@@ -130,6 +130,28 @@ body.right-hidden #hud,body.hp #hud{left:0;transform:none;width:100%;max-width:1
 body:not(.started) .panel-toggle{display:none}
 @media(max-width:700px){.howto-body{grid-template-columns:1fr}.welcome-card{padding:24px}.welcome-card p{font-size:13px}}
 
+
+/* Fokus animasi otomatis: sembunyikan tabel/panel selama proses berjalan. */
+#animationFocusHud{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:60;width:min(530px,94vw);display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 12px;border:1px solid #43627c;border-radius:13px;background:linear-gradient(135deg,rgba(7,17,29,.94),rgba(18,39,59,.94));box-shadow:0 12px 32px #0008;color:#eaf4fc;backdrop-filter:blur(12px)}
+#animationFocusHud[hidden]{display:none!important}
+.focus-copy{min-width:0;flex:1}
+.focus-kicker{display:flex;align-items:center;gap:7px;color:#7ae5d5;font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.focus-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#48e0bc;box-shadow:0 0 10px #48e0bc;animation:opticPulse 1.4s infinite}
+#focusProcessName{display:block;margin-top:3px;font-size:13px;line-height:1.25;font-weight:800;color:#fff}
+#focusProcessDetail{display:block;margin-top:3px;font-size:10px;line-height:1.35;color:#b4c8dc}
+.focus-actions{display:flex;gap:5px;align-items:center;flex:none}
+#animationFocusHud button{padding:7px 9px;border-radius:8px;white-space:nowrap;font-weight:700;font-size:11px;background:#1b3450;border-color:#45627e;color:#edf6ff}
+#animationFocusHud #focusPause{background:#35c2b0;border-color:#8de8db;color:#04211d}
+#animationFocusHud #focusStop{background:#57251f;border-color:#a64c41;color:#fff}
+body.focus-animation #c{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important}
+body.focus-animation .bar,body.focus-animation .col,body.focus-animation .panel-toggle,body.focus-animation #menuWrap,body.focus-animation #toast,body.focus-animation #app,body.focus-animation #howtoBackdrop,body.focus-animation .lb{display:none!important}
+/* HUD proses optik tetap terlihat dalam mode fokus, hanya saat pembacaan aktif. */
+body.focus-animation #opticalStatus{display:block!important}
+body.focus-animation #animationFocusHud{display:flex!important}
+body.focus-animation #hud{display:none!important}
+body.focus-animation{background:#10161f}
+@media(max-width:600px){#animationFocusHud{align-items:flex-start;gap:8px;padding:8px}.focus-actions{flex-wrap:wrap;justify-content:flex-end}#animationFocusHud button{padding:6px 7px;font-size:10px}#focusProcessDetail{max-width:48vw}}
+
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="welcome">
@@ -179,7 +201,7 @@ body:not(.started) .panel-toggle{display:none}
 </div>
 <div class="bar">
  <div class="grp"><span>Kamera</span><button data-v="front">Depan</button><button data-v="top">Atas</button><button data-v="back">Belakang</button><button data-v="side">Samping</button><button data-v="inst">Instrumen</button><button data-v="opt">Optik</button><button data-v="lamp">Lampu</button><button data-v="cuv">Kuvet</button><button data-v="mon">Monitor</button></div>
- <div class="grp"><span>Tampilan</span><button id="bX">Transparan</button><button id="bB" class="on">Berkas</button><button id="bL">Label</button><button id="bR">Putar</button><button id="bIdentify" title="Jeda pengukuran dan kenali komponen">Kenali Bagian</button><button id="bPause" disabled>Jeda proses</button></div>
+ <div class="grp"><span>Tampilan</span><button id="bX">Transparan</button><button id="bB" class="on">Berkas</button><button id="bL">Label</button><button id="bR">Putar</button><button id="bIdentify" title="Jeda pengukuran dan kenali komponen">Kenali Bagian</button><button id="bPause">Jeda animasi</button></div>
  <div class="grp"><button id="bA" class="pri">Buka Cary WinUV</button><button id="bP">Panel</button><button id="bFS">Layar penuh</button><button id="bRe">Reset</button></div>
 </div>
 <!-- Tombol panah untuk menyembunyikan dan memunculkan panel samping -->
@@ -230,6 +252,19 @@ body:not(.started) .panel-toggle{display:none}
   <div class="optic-stage" data-stage="4"><i></i><span>Detektor</span></div>
  </div>
 </div>
+
+<div id="animationFocusHud" hidden aria-live="polite">
+ <div class="focus-copy">
+  <div class="focus-kicker"><span class="focus-dot"></span> Mode fokus animasi</div>
+  <strong id="focusProcessName">Menyiapkan proses optik</strong>
+  <small id="focusProcessDetail">Tampilan tabel dan panel akan kembali setelah proses selesai.</small>
+ </div>
+ <div class="focus-actions">
+  <button id="focusPause" type="button">Jeda proses</button>
+  <button id="focusIdentify" type="button" title="Jeda lalu tampilkan label komponen">Kenali</button>
+  <button id="focusStop" type="button">Stop</button>
+ </div>
+</div>
 <div id="app" hidden>
  <div class="wt"><span>Cary WinUV · Simulasi pengukuran</span><div class="wt-actions"><button id="minApp" type="button" title="Minimalkan untuk melihat animasi 3D">−</button><button id="xapp" type="button" title="Tutup aplikasi">✕</button></div></div>
  <div class="bd">
@@ -256,10 +291,12 @@ body:not(.started) .panel-toggle{display:none}
       Massa sampel <input id="massa" type="number" step="0.0001" min="0" value="2.5012"> g &nbsp;
       Volume labu <input id="vol" type="number" step="1" min="0" value="50"> mL &nbsp;
       Faktor pengenceran <input id="df" type="number" min="1" step="0.5" value="1"><br>
-      Absorban sampel <input id="aU" type="number" step="0.001" min="0" placeholder="isi / ukur"> &nbsp;
+      Absorban sampel <input id="aU" type="number" step="0.001" min="0" placeholder="otomatis / input manual"> <button id="applyLastRead" type="button" title="Pindahkan hasil sampel terakhir dari Simple Reads">Ambil hasil terakhir</button><br>
+      <small id="sampleAbsSource" style="display:block;color:#44546a;margin:3px 0 6px">Nilai absorbansi akan terisi otomatis setelah sampel dibaca pada Simple Reads. Kamu juga bisa mengetik atau mengedit nilainya secara manual.</small>
       Bobot rata-rata 1 tablet (opsional) <input id="tabw" type="number" step="0.001" min="0" placeholder="g"></div>
      <div class="bx"><b>Recovery (sampel + spike)</b><br>
-      Absorban sampel + spike <input id="aSp" type="number" step="0.001" min="0" placeholder="isi / ukur"> &nbsp;
+      Absorban sampel + spike <input id="aSp" type="number" step="0.001" min="0" placeholder="otomatis / input manual"> <button id="applyLastSpike" type="button" title="Pindahkan hasil sampel + spike terakhir">Ambil hasil terakhir</button><br>
+      <small id="spikeAbsSource" style="display:block;color:#44546a;margin:3px 0 6px">Hasil sampel + spike bisa terisi otomatis, atau dimasukkan manual.</small>
       Konsentrasi spike yang ditambahkan <input id="cAdd" type="number" step="0.5" min="0" value="2"> ppm</div>
      <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap"><button id="cAll">Ukur semua standar</button><button id="cFit">Hitung kurva</button><button id="cUnk">Ukur sampel</button><button id="cSpk">Ukur sampel + spike</button><button id="cClr">Hapus data kalibrasi</button></div>
     </div>
@@ -277,7 +314,7 @@ if(typeof THREE==='undefined'){document.body.innerHTML='<p style="padding:20px">
 else{
 const BY=0.8, WARM=12;
 const AUTO_V='#ffb000', AUTO_D='#8a4dff';
-const S={ups:0,inst:0,pc:0,mon:0,booted:0,bootT:0,warm:0,base:0,lid:0,cuv:0,app:0,xray:0,beam:1,job:null,lam:500,sample:'blank',solutionKey:'aquades',conc:5,spkC:2,tab:'scan',res:null,lbl:0,autoX:0,camOpt:0,lampMode:'auto',lampColor:AUTO_V,lampI:1,lmax:null,out:{},identifyMode:0,measureVisual:0,paused:0,batchMeasuring:0,resumeAppAfterIdentify:0,appMinimized:0,opticalClock:0,simpleHistory:[],accuracyWeights:{akurasi_1:0.005,akurasi_2:0.005,akurasi_3:0.005,akurasi_4:0.005,akurasi_5:0.005}};
+const S={ups:0,inst:0,pc:0,mon:0,booted:0,bootT:0,warm:0,base:0,lid:0,cuv:0,app:0,xray:0,beam:1,job:null,lam:500,sample:'blank',solutionKey:'aquades',conc:5,spkC:2,tab:'scan',res:null,lbl:0,autoX:0,camOpt:0,lampMode:'auto',lampColor:AUTO_V,lampI:1,lmax:null,out:{},identifyMode:0,measureVisual:0,paused:0,batchMeasuring:0,resumeAppAfterIdentify:0,appMinimized:0,opticalClock:0,visualTime:0,simpleHistory:[],lastSampleRead:null,isAutoFillingAbs:false,focusRestore:null,accuracyWeights:{akurasi_1:0.005,akurasi_2:0.005,akurasi_3:0.005,akurasi_4:0.005,akurasi_5:0.005}};
 const DATA_LMAX_NM=246.0; // Nilai acuan dari model/data yang sudah dipakai. Ubah sesuai hasil praktikum aktual.
 S.cal={l:246,std:[0,5,10,15,20,25].map(c=>({c,a:null,sd:null})),fit:null,unk:null,spk:null};
 // ---------- util
@@ -293,12 +330,12 @@ const readA=l=>Math.max(0,(S.cuv?specA(l):0)+noise());
 // ---------- scene
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x1b2330);
 const cam=new THREE.PerspectiveCamera(45,1,.1,100);cam.position.set(-1,6.2,16);
-const ren=new THREE.WebGLRenderer({canvas:$('c'),antialias:true});ren.setPixelRatio(Math.min(Math.max(devicePixelRatio,1.5),2.5));ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;
-ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=1.05;
+const ren=new THREE.WebGLRenderer({canvas:$('c'),antialias:true,alpha:false,powerPreference:'high-performance'});ren.setPixelRatio(Math.min(Math.max(window.devicePixelRatio||1,1.75),2.5));ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;ren.shadowMap.autoUpdate=true;
+ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=1.1;ren.physicallyCorrectLights=false;ren.domElement.style.imageRendering='auto';
 {const pm=new THREE.PMREMGenerator(ren),es=new THREE.Scene();es.background=new THREE.Color(0x7d8794);[[0,9,0,14,.5,14,1.8],[10,4,6,2,6,6,1.3],[-10,4,6,2,6,6,1.1],[0,3,-10,16,5,1,.8]].forEach(a=>{const m=new THREE.Mesh(new THREE.BoxGeometry(a[3],a[4],a[5]),new THREE.MeshBasicMaterial({color:new THREE.Color(a[6],a[6],a[6])}));m.position.set(a[0],a[1],a[2]);es.add(m)});scene.environment=pm.fromScene(es,.04).texture}
 const ctl=new THREE.OrbitControls(cam,ren.domElement);ctl.target.set(1,.8,0);ctl.maxPolarAngle=Math.PI/2.05;ctl.minDistance=1.5;ctl.maxDistance=24;ctl.enableDamping=true;
 scene.add(new THREE.HemisphereLight(0xffffff,0x667788,.8));
-const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(5,12,8);dl.castShadow=true;dl.shadow.mapSize.set(2048,2048);Object.assign(dl.shadow.camera,{left:-12,right:12,top:12,bottom:-12});scene.add(dl);
+const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(5,12,8);dl.castShadow=true;dl.shadow.mapSize.set(2048,2048);dl.shadow.bias=-0.00015;dl.shadow.radius=3;Object.assign(dl.shadow.camera,{left:-12,right:12,top:12,bottom:-12});scene.add(dl);
 const std=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6,metalness:.05},o));
 function bx(w,h,d,m,x,y,z,p){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof m==='number'?std(m):m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;(p||scene).add(o);return o}
 function cy(r,h,m,x,y,z,p,rx,rz){const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),typeof m==='number'?std(m):m);o.position.set(x,y,z);o.rotation.x=rx||0;o.rotation.z=rz||0;o.castShadow=true;(p||scene).add(o);return o}
@@ -315,9 +352,9 @@ bx(30,8,.2,0xe8dcc0,0,3,-4.3);[-7,4].forEach(x=>bx(.8,8,.3,0xe8782a,x,3,-4.15));
 const cab=bx(2.6,3,.5,0x8fa3b5,-3,1.5,-4);cab.material.transparent=true;cab.material.opacity=.6;
 // ---------- Cary 100
 const cary=new THREE.Group();cary.position.set(-3.2,0,0);scene.add(cary);
-const bumpT=canvasTex(256,256,(g)=>{const d=g.createImageData(256,256);for(let i=0;i<d.data.length;i+=4){const v=122+Math.random()*12;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}g.putImageData(d,0,0)});bumpT.wrapS=bumpT.wrapT=THREE.RepeatWrapping;bumpT.encoding=THREE.LinearEncoding;
-const shW=new THREE.MeshPhysicalMaterial({color:0xf1f1ec,roughness:.36,clearcoat:.55,clearcoatRoughness:.25,bumpMap:bumpT,bumpScale:.12,transparent:true});
-const shD=new THREE.MeshPhysicalMaterial({color:0x34373b,roughness:.48,metalness:.1,clearcoat:.35,bumpMap:bumpT,bumpScale:.12,transparent:true});
+const bumpT=canvasTex(768,768,(g)=>{const d=g.createImageData(768,768);for(let i=0;i<d.data.length;i+=4){const v=124+Math.random()*8;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}g.putImageData(d,0,0)});bumpT.wrapS=bumpT.wrapT=THREE.RepeatWrapping;bumpT.encoding=THREE.LinearEncoding;bumpT.anisotropy=ren.capabilities.getMaxAnisotropy();
+const shW=new THREE.MeshPhysicalMaterial({color:0xf1f1ec,roughness:.29,metalness:.025,clearcoat:.8,clearcoatRoughness:.2,bumpMap:bumpT,bumpScale:.065,transparent:true});
+const shD=new THREE.MeshPhysicalMaterial({color:0x34373b,roughness:.4,metalness:.14,clearcoat:.55,clearcoatRoughness:.25,bumpMap:bumpT,bumpScale:.06,transparent:true});
 const shells=[];
 function rrs(w,d,r){const s=new THREE.Shape(),x=-w/2,y=-d/2;s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+d-r);s.quadraticCurveTo(x+w,y+d,x+w-r,y+d);s.lineTo(x+r,y+d);s.quadraticCurveTo(x,y+d,x,y+d-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s}
 function slabG(w,d,h,r,hole){const s=rrs(w,d,r);if(hole){const a=hole,q=new THREE.Path();q.moveTo(a[0]-a[2]/2,-a[1]-a[3]/2);q.lineTo(a[0]+a[2]/2,-a[1]-a[3]/2);q.lineTo(a[0]+a[2]/2,-a[1]+a[3]/2);q.lineTo(a[0]-a[2]/2,-a[1]+a[3]/2);q.closePath();s.holes.push(q)}const b=Math.min(.03,h/3);const g=new THREE.ExtrudeGeometry(s,{depth:h-2*b,bevelEnabled:true,bevelThickness:b,bevelSize:b,bevelOffset:-b,bevelSegments:3,curveSegments:10});g.rotateX(-Math.PI/2);g.translate(0,b,0);return g}
@@ -334,8 +371,16 @@ for(let i=0;i<9;i++)bx(1.3,.012,.025,0x0b0b0b,-1.7,1.385,-1.83+i*.07,cary);
 const lid=new THREE.Group();lid.position.set(0,1.1,-.7);cary.add(lid);
 tag(sg(slabG(2.5,2.5,.08,.1),shD,0,0,1.25,lid,true),'lid');tag(bx(.8,.1,.1,0x0d0d0d,0,.1,2.4,lid),'lid');
 for(let i=0;i<10;i++){bx(.02,.3,.06,0x1c1e22,2.805,.25,-1.8+i*.16,cary);bx(.02,.3,.06,0x1c1e22,-2.805,.25,-1.8+i*.16,cary)}bx(5.4,.012,.02,0x1c1e22,0,.5,2.2,cary);[[-2.6,-2],[2.6,-2],[-2.6,2],[2.6,2]].forEach(a=>cy(.13,.05,0x111111,a[0],-.0,a[1],cary));
-// strip depan
-bx(5.4,.22,.05,0x4a4d52,0,.12,2.21,cary);
+// Strip depan, trim logam halus, kisi ventilasi, dan sekrup casing beresolusi tinggi.
+const instrumentTrim=std(0xb8c0c8,{metalness:.78,roughness:.24,clearcoat:.55});
+bx(5.4,.22,.05,new THREE.MeshPhysicalMaterial({color:0x42474d,roughness:.32,metalness:.32,clearcoat:.65}),0,.12,2.21,cary);
+bx(5.22,.018,.018,instrumentTrim,0,.265,2.232,cary);
+for(let i=0;i<8;i++)bx(.72,.012,.012,0x22272c,1.48,.20+i*.035,2.235,cary);
+for(let i=0;i<6;i++)bx(.34,.009,.012,0x181c21,-2.35,.30+i*.035,2.235,cary);
+[[-2.48,.31],[2.48,.31],[-2.48,1.47],[2.48,1.47]].forEach(q=>{
+ const screw=cy(.026,.012,instrumentTrim,q[0],q[1],2.238,cary,Math.PI/2,0);tag(screw,'body');
+ const slot=bx(.025,.004,.004,0x353b42,q[0],q[1],2.247,cary);slot.rotation.z=.55;
+});
 const ledM=std(0x114411,{emissive:0x000000});sp(.05,ledM,-2.5,.12,2.25,cary);
 const rocker=bx(.3,.18,.07,0x111111,-2.1,.12,2.26,cary);tag(rocker,'sw');
 tag(bx(.6,.1,.05,0x222222,-.4,.12,2.25,cary),'port');
@@ -429,7 +474,7 @@ const pM=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9
 const glowT=canvasTex(128,128,(g)=>{const r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.18,'rgba(255,255,255,.8)');r.addColorStop(.42,'rgba(255,255,255,.25)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,128,128)});
 // tekstur lampu: INTI SOLID berwarna + lingkar cahaya tipis (bukan gradasi pudar)
 const coreT=canvasTex(128,128,(g)=>{const r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.40,'rgba(255,255,255,1)');r.addColorStop(.46,'rgba(255,255,255,.75)');r.addColorStop(.62,'rgba(255,255,255,.22)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,128,128)});
-const halos=[];[[-2.6,-1.7,'lv',1.1],[-2.2,-1.2,'ld',1.0],[-1.9,-1.7,'c',.55],[-1.9,-.6,'c',.6],[-1.1,-1.1,'c',.55],[-1.1,.5,'c',.6],[-1.1,.95,'s1',.5],[1.5,.95,'s2',.5],[-1.1,.05,'r',.5],[1.5,.05,'r',.5],[2.3,.5,'p',.9],[0,.95,'s1',.4]].forEach(a=>{const lamp=a[2]==='lv'||a[2]==='ld';const m=new THREE.SpriteMaterial({map:lamp?coreT:glowT,color:0xff0000,transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false});const s=new THREE.Sprite(m);s.scale.set(a[3],a[3],1);s.position.set(a[0],BY,a[1]);s.renderOrder=11;opt.add(s);halos.push({m,t:a[2]})});
+const halos=[];[[-2.6,-1.7,'lv',1.1],[-2.2,-1.2,'ld',1.0],[-1.9,-1.7,'c',.55],[-1.9,-.6,'c',.6],[-1.1,-1.1,'c',.55],[-1.1,.5,'c',.6],[-1.1,.95,'s1',.5],[1.5,.95,'s2',.5],[-1.1,.05,'r',.5],[1.5,.05,'r',.5],[2.3,.5,'p',.9],[0,.95,'s1',.4]].forEach(a=>{const lamp=a[2]==='lv'||a[2]==='ld';const m=new THREE.SpriteMaterial({map:lamp?coreT:glowT,color:0xff0000,transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false});const s=new THREE.Sprite(m);s.scale.set(a[3],a[3],1);s.position.set(a[0],BY,a[1]);s.renderOrder=11;opt.add(s);halos.push({m,t:a[2],s,baseScale:a[3]})});
 const preGratingLen=rS.cum[3],preChopperLen=rS.cum[common.length-1];
 [rS,rR].forEach((r,k)=>{for(let i=0;i<14;i++){
  const mat=pM.clone();const s=sp(.038,mat,0,BY,0,opt);s.renderOrder=12;
@@ -440,22 +485,47 @@ const preGratingLen=rS.cum[3],preChopperLen=rS.cum[common.length-1];
 // ---------- UPS, PC, monitor, props
 const ups=new THREE.Group();ups.position.set(.9,0,.2);scene.add(ups);
 tag(rm(slabG(1.2,1.9,1.2,.12),0x16161a,0,.1,0,ups),'ups');bx(1.2,.14,1.9,0xc9a227,0,.07,0,ups);bx(1.2,.14,1.9,0xc9a227,0,1.37,0,ups);
-const upsLed=[];for(let i=0;i<5;i++)upsLed.push(sp(.04,std(0x114411,{emissive:0}),-.2+i*.1,.6,.97,ups));
-plane(.5,.2,txt(['ICA'],100,40,'#16161a','#c9a227',28),0,.85,.961,ups);
-tag(cy(.09,.05,0xdddddd,.35,1.0,.97,ups,Math.PI/2),'upsbtn');
+const upsLed=[];for(let i=0;i<5;i++)upsLed.push(sp(.04,std(0x114411,{emissive:0}),-.2+i*.1,.6,.994,ups));
+// Detail panel UPS: LCD, chassis seam, status LEDs, vents and fasteners.
+const upsPanelMat=new THREE.MeshPhysicalMaterial({color:0x202831,roughness:.32,metalness:.22,clearcoat:.5});
+bx(.62,.43,.028,upsPanelMat,-.055,.94,.982,ups);
+const upsLCD=canvasTex(384,144,(g,w,h)=>{g.fillStyle='#061219';g.fillRect(0,0,w,h);g.strokeStyle='#2b7682';g.lineWidth=5;g.strokeRect(5,5,w-10,h-10);g.fillStyle='#80f4cf';g.font='bold 36px monospace';g.fillText('UPS ONLINE',18,47);g.font='28px monospace';g.fillText('230 V  |  50 Hz',18,88);g.fillStyle='#5fb99f';g.fillRect(18,108,Math.round((w-36)*.86),8)});
+plane(.49,.18,upsLCD,-.055,.97,1.0,ups);
+plane(.62,.105,txt(['ICA  •  POWER PROTECTION'],310,52,'#131a22','#d8c99c',18),-.055,.655,.994,ups);
+tag(cy(.09,.05,0xd9e1e8,.35,1.0,.997,ups,Math.PI/2),'upsbtn');
+for(let i=0;i<9;i++){bx(.38,.012,.012,0x090e13,-.055,.30+i*.025,.984,ups)}
+[[-.32,.76],[.21,.76],[-.32,1.12],[.21,1.12]].forEach(p=>{cy(.013,.012,0xc5cbd0,p[0],p[1],1.001,ups,Math.PI/2,0)});
 const folder=bx(1.1,.04,1.5,0x6fb3e0,0,1.46,0,ups);
 const pcG=new THREE.Group();pcG.position.set(2.7,0,0);scene.add(pcG);
-tag(rm(slabG(.95,2.1,1.9,.08),0x15151a,0,0,0,pcG),'pc');bx(.9,.75,.02,0x8e9298,0,.45,1.06,pcG);bx(.9,.22,.03,0x0a0a0a,0,1.55,1.06,pcG);
-tag(cy(.06,.04,0xdddddd,-.25,1.2,1.07,pcG,Math.PI/2),'pcbtn');
-for(let i=0;i<4;i++)bx(.07,.03,.03,0x555,.0+i*.1,1.2,1.07,pcG);
-const pcLed=sp(.03,std(0x114411,{emissive:0}),-.1,1.2,1.07,pcG);plane(.3,.08,txt(['DELL'],90,24,'#8e9298','#222',18),0,.85,1.075,pcG);
+tag(rm(slabG(.95,2.1,1.9,.08),0x15151a,0,0,0,pcG),'pc');
+// Front bezel and drive bay with a brushed-metal finish.
+bx(.9,.75,.025,new THREE.MeshPhysicalMaterial({color:0x252b32,roughness:.3,metalness:.28,clearcoat:.5}),0,.45,1.072,pcG);
+bx(.9,.22,.032,0x0a0a0a,0,1.55,1.075,pcG);
+bx(.55,.016,.012,0x929da9,0,1.575,1.095,pcG);bx(.08,.026,.012,0x586575,.32,1.535,1.095,pcG);
+tag(cy(.06,.04,0xdde5ed,-.25,1.2,1.085,pcG,Math.PI/2),'pcbtn');
+for(let i=0;i<4;i++)bx(.058,.032,.018,0x070a0e,-.11+i*.085,1.2,1.09,pcG);
+const pcLed=sp(.03,std(0x114411,{emissive:0}),-.1,1.2,1.105,pcG);plane(.3,.08,txt(['DELL'],180,48,'#737e89','#f2f4f6',18),0,.85,1.092,pcG);
+// High-density horizontal air vents and side-panel perforations.
+for(let i=0;i<12;i++)bx(.42,.009,.012,0x090d12,.17,.17+i*.035,1.091,pcG);
+for(let i=0;i<5;i++){bx(.065,.028,.016,0x05080b,.12+i*.09,1.2,1.094,pcG)}
+for(let i=0;i<8;i++)bx(.012,.58,.014,0x2d343d,.485,.43,-.52+i*.145,pcG);
+[[-.39,.13],[.39,.13],[-.39,.77],[.39,.77]].forEach(p=>{cy(.012,.012,0x9fa8b2,p[0],p[1],1.092,pcG,Math.PI/2,0)});
 bx(.9,.12,1.3,0xcc2b2b,0,1.96,0,pcG);
 const mon=new THREE.Group();mon.position.set(5,0,-.6);scene.add(mon);
-bx(.8,.06,.6,0x111111,0,.03,0,mon);bx(.15,.7,.12,0x111111,0,.4,0,mon);
-tag(bx(2.7,1.55,.1,0x111111,0,1.3,0,mon),'monbody');
-const scrC=document.createElement('canvas');scrC.width=512;scrC.height=300;const scrT=new THREE.CanvasTexture(scrC);scrT.encoding=THREE.sRGBEncoding;
-const scr=plane(2.5,1.35,scrT,0,1.3,.055,mon);tag(scr,'screen');
-tag(cy(.05,.03,0x333333,1.1,.58,.06,mon,Math.PI/2),'monbtn');const monLed=sp(.025,std(0x114411,{emissive:0}),.95,.58,.06,mon);
+// Weighted stand and graphite bezel with a high-density 1024×600 display texture.
+cy(.31,.065,new THREE.MeshPhysicalMaterial({color:0x1a1d22,roughness:.28,metalness:.3,clearcoat:.65}),0,.035,.08,mon,0,0).scale.set(1.48,1,1.05);
+bx(.8,.06,.6,0x111111,0,.03,0,mon);bx(.15,.7,.12,new THREE.MeshPhysicalMaterial({color:0x272c33,roughness:.3,metalness:.35}),0,.4,0,mon);
+tag(bx(2.7,1.55,.1,new THREE.MeshPhysicalMaterial({color:0x101318,roughness:.26,metalness:.28,clearcoat:.75,clearcoatRoughness:.2}),0,1.3,0,mon),'monbody');
+const bezelTex=canvasTex(32,32,(g,w,h)=>{g.fillStyle='#11161d';g.fillRect(0,0,w,h);g.strokeStyle='#333b45';g.lineWidth=2;g.strokeRect(1,1,w-2,h-2)});
+plane(2.57,1.49,bezelTex,0,1.3,.054,mon);
+const scrC=document.createElement('canvas');scrC.width=1024;scrC.height=600;const scrT=new THREE.CanvasTexture(scrC);scrT.encoding=THREE.sRGBEncoding;scrT.anisotropy=ren.capabilities.getMaxAnisotropy();scrT.minFilter=THREE.LinearMipmapLinearFilter;scrT.magFilter=THREE.LinearFilter;scrT.generateMipmaps=true;
+const scr=plane(2.5,1.46,scrT,0,1.3,.058,mon);tag(scr,'screen');
+const glareT=canvasTex(512,300,(g,w,h)=>{g.clearRect(0,0,w,h);const gr=g.createLinearGradient(0,0,w*.65,h);gr.addColorStop(0,'rgba(255,255,255,.13)');gr.addColorStop(.35,'rgba(255,255,255,.035)');gr.addColorStop(.7,'rgba(255,255,255,0)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.beginPath();g.moveTo(0,0);g.lineTo(w*.3,0);g.lineTo(w,h);g.lineTo(w*.72,h);g.closePath();g.fill()});
+const screenGlare=new THREE.Mesh(new THREE.PlaneGeometry(2.5,1.46),new THREE.MeshBasicMaterial({map:glareT,transparent:true,opacity:.58,depthWrite:false}));screenGlare.position.set(0,1.3,.060);mon.add(screenGlare);
+plane(.34,.055,txt(['DELL'],160,32,'#11161d','#aeb9c5',14),-.22,.555,.061,mon);
+for(let i=0;i<18;i++){const x=-.75+i*.09;bx(.018,.008,.008,0x343b43,x,.57,.0615,mon)}
+tag(cy(.05,.03,0x333b44,1.1,.58,.062,mon,Math.PI/2),'monbtn');const monLed=sp(.025,std(0x114411,{emissive:0}),.95,.58,.067,mon);
+[[-1.28,.61],[1.28,.61],[-1.28,1.99],[1.28,1.99]].forEach(p=>{cy(.012,.01,0x747e89,p[0],p[1],.061,mon,Math.PI/2,0)});
 const kb=bx(1.7,.05,.6,0x1a1a1a,5,.025,1.1,scene);tag(kb,'kbd');plane(1.6,.5,canvasTex(256,80,(g,w,h)=>{g.fillStyle='#1a1a1a';g.fillRect(0,0,w,h);g.fillStyle='#444';for(let r=0;r<5;r++)for(let c=0;c<20;c++)g.fillRect(6+c*12.3,6+r*14,10,11)}),5,.052,1.1,scene,1);
 bx(1.1,.01,.9,0xf2d36b,6.4,.005,1.1);tag(bx(.2,.08,.32,0x111111,6.4,.05,1.1),'mouse');
 const kim=new THREE.Group();kim.position.set(-4.6,0,3.3);scene.add(kim);bx(1,.05,.7,0x1f4d3a,0,.03,0,kim);tag(bx(.7,.35,.45,0x3a8a8f,0,.22,0,kim),'kim');bx(.3,.2,.1,0xffffff,0,.45,0,kim);cy(.06,.28,0xf0f0f0,.4,.2,.15,kim);cy(.06,.28,0xf0f0f0,.4,.2,-.1,kim);
@@ -497,30 +567,140 @@ function toggleLid(){if(S.job){toast('Tunggu pengukuran selesai.');return}S.lid=
 function toggleCuv(){if(S.job){toast('Tunggu pengukuran selesai.');return}if(!S.lid){toast('Buka tutup kompartemen sampel dulu.');return}S.cuv=S.cuv?0:1}
 // ---------- layar monitor
 let lastScr='';
-function drawScreen(){const st=!S.mon?'off':!S.pc?'nosig':!S.booted?'boot':'desk'+(S.app&&!S.appMinimized);if(st===lastScr)return;lastScr=st;const g=scrC.getContext('2d'),w=512,h=300;
- if(st==='off'){g.fillStyle='#050505';g.fillRect(0,0,w,h)}
- else if(st==='nosig'){g.fillStyle='#0a1a3a';g.fillRect(0,0,w,h);g.fillStyle='#fff';g.font='20px sans-serif';g.fillText('No Signal',200,150)}
- else if(st==='boot'){g.fillStyle='#000';g.fillRect(0,0,w,h);g.fillStyle='#fff';g.font='22px sans-serif';g.fillText('Starting Windows',160,150)}
- else{const gr=g.createRadialGradient(330,140,10,330,140,300);gr.addColorStop(0,'#ff7aa8');gr.addColorStop(1,'#f4d9e4');g.fillStyle=gr;g.fillRect(0,0,w,h);
-  ['Adobe Reader XI','Recycle Bin','Cary WinUV','Simple Reads','Concentration','Scan','e1','e21','e22','e23','e24'].forEach((n,i)=>{const x=14+Math.floor(i/6)*66,y=10+(i%6)*44;g.fillStyle=i===2?'#e8c85a':'#fff';g.fillRect(x+14,y,26,24);g.strokeStyle='#2a2a9a';g.strokeRect(x+14,y,26,24);g.fillStyle='#000';g.font='9px sans-serif';g.fillText(n.slice(0,12),x,y+36)});
-  g.fillStyle='#3a6fb0';g.fillRect(0,278,w,22);if(S.app&&!S.appMinimized){g.fillStyle='#fff';g.fillRect(150,50,300,180);g.fillStyle='#0a3fa8';g.fillRect(150,50,300,16);g.fillStyle='#fff';g.font='11px sans-serif';g.fillText('Cary WinUV – Scan',156,62)}}
- scrT.needsUpdate=true}
+function drawScreen(){
+ const baseState=!S.mon?'off':!S.pc?'nosig':!S.booted?'boot':'desk'+(S.app&&!S.appMinimized);
+ const st=(S.app&&!S.appMinimized&&baseState.startsWith('desk'))?baseState+':'+(S.paused?'PAUSED':(S.job||S.batchMeasuring)?'MEASURING':'READY')+':'+Math.round(S.lam)+':'+(S.base?'ZERO':'NOZERO'):baseState;
+ if(st===lastScr)return;lastScr=st;
+ const g=scrC.getContext('2d'),w=512,h=300;g.setTransform(2,0,0,2,0,0);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+ g.clearRect(0,0,w,h);
+ if(st==='off'){
+  g.fillStyle='#03060a';g.fillRect(0,0,w,h);
+  const offGlow=g.createRadialGradient(250,150,5,250,150,190);offGlow.addColorStop(0,'#111821');offGlow.addColorStop(1,'#03060a');g.fillStyle=offGlow;g.fillRect(0,0,w,h);
+ }else if(st==='nosig'){
+  const grad=g.createLinearGradient(0,0,w,h);grad.addColorStop(0,'#071329');grad.addColorStop(1,'#123c62');g.fillStyle=grad;g.fillRect(0,0,w,h);
+  g.strokeStyle='#23506f';g.lineWidth=1;for(let x=0;x<w;x+=24){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke()}for(let y=0;y<h;y+=24){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke()}
+  g.fillStyle='#eaf5ff';g.textAlign='center';g.font='600 18px Segoe UI,Arial';g.fillText('NO SIGNAL',w/2,h/2-2);g.font='10px Segoe UI,Arial';g.fillStyle='#9ab7ce';g.fillText('Periksa kabel display dan komputer',w/2,h/2+18);g.textAlign='left';
+ }else if(st==='boot'){
+  const bg=g.createLinearGradient(0,0,0,h);bg.addColorStop(0,'#020711');bg.addColorStop(1,'#071c32');g.fillStyle=bg;g.fillRect(0,0,w,h);
+  g.save();g.translate(w/2,94);for(let i=0;i<12;i++){const a=i*Math.PI/6+(S.visualTime||0)*.35;g.fillStyle=`rgba(103,205,255,${.22+i*.06})`;g.beginPath();g.arc(Math.cos(a)*22,Math.sin(a)*22,2.3,0,Math.PI*2);g.fill()}g.restore();
+  g.fillStyle='#edf7ff';g.textAlign='center';g.font='500 15px Segoe UI,Arial';g.fillText('Memulai Windows',w/2,142);g.fillStyle='#91aeca';g.font='10px Segoe UI,Arial';g.fillText('Menyiapkan lingkungan instrumen...',w/2,160);g.textAlign='left';
+ }else{
+  const bg=g.createLinearGradient(0,0,w,h);bg.addColorStop(0,'#0b2741');bg.addColorStop(.55,'#15506c');bg.addColorStop(1,'#071a33');g.fillStyle=bg;g.fillRect(0,0,w,h);
+  const glow=g.createRadialGradient(390,44,0,390,44,180);glow.addColorStop(0,'rgba(69,199,223,.28)');glow.addColorStop(1,'rgba(69,199,223,0)');g.fillStyle=glow;g.fillRect(0,0,w,h);
+  // Desktop shortcut icons with high-resolution labels.
+  const icons=[['PC','#9fc5de'],['Recycle','#91a6bd'],['Cary WinUV','#49d4b1'],['Simple Reads','#72a9ff'],['Concentration','#e8be67'],['Scan','#ae92ff']];
+  icons.forEach((it,i)=>{const col=i<3?0:1,row=i%3,x=12+col*72,y=12+row*49;g.fillStyle='rgba(2,13,24,.22)';g.fillRect(x+3,y+3,31,28);const ig=g.createLinearGradient(x,y,x+28,y+25);ig.addColorStop(0,'#f7fbff');ig.addColorStop(1,it[1]);g.fillStyle=ig;g.fillRect(x,y,27,24);g.strokeStyle='#e1f1fb';g.lineWidth=.7;g.strokeRect(x+.5,y+.5,26,23);g.fillStyle='#112538';g.font='bold 8px Segoe UI,Arial';g.fillText(it[0]==='PC'?'PC':it[0]==='Recycle'?'♻':it[0]==='Cary WinUV'?'UV':it[0]==='Simple Reads'?'SR':it[0]==='Concentration'?'C':'λ',x+8,y+15);g.fillStyle='#f4f8ff';g.font='8px Segoe UI,Arial';g.fillText(it[0],x-1,y+35)});
+  // Bottom desktop taskbar.
+  g.fillStyle='rgba(4,13,24,.93)';g.fillRect(0,278,w,22);g.fillStyle='#2f9be8';g.fillRect(0,278,5,22);g.fillStyle='#f0f6fc';g.beginPath();g.arc(14,289,5,0,Math.PI*2);g.fill();g.fillStyle='#75bbeb';g.font='9px Segoe UI,Arial';g.fillText('Cari aplikasi',25,292);g.fillStyle='#8ea8bf';g.fillText('Wi-Fi   ▪   100%',w-82,292);
+  if(S.app&&!S.appMinimized){
+   const x=70,y=27,ww=428,hh=247;
+   g.fillStyle='rgba(0,0,0,.42)';g.fillRect(x+4,y+5,ww,hh);
+   g.fillStyle='#edf1f7';g.fillRect(x,y,ww,hh);g.strokeStyle='#70859e';g.strokeRect(x+.5,y+.5,ww-1,hh-1);
+   const title=g.createLinearGradient(x,y,x,y+20);title.addColorStop(0,'#2b72c8');title.addColorStop(1,'#16498f');g.fillStyle=title;g.fillRect(x,y,ww,20);
+   g.fillStyle='#fff';g.font='bold 10px Segoe UI,Arial';g.fillText('Agilent Cary WinUV  |  UV-Visible Spectroscopy',x+8,y+13);
+   g.fillStyle='#e8edf5';g.fillRect(x,y+20,ww,18);g.fillStyle='#263a50';g.font='9px Segoe UI,Arial';g.fillText('File   Method   Instrument   Configure   Reports   Help',x+8,y+32);
+   const tabs=[['Scan',0],['Simple Reads',1],['Concentration',2]];tabs.forEach(([label,i])=>{const tx=x+8+i*88;g.fillStyle=S.tab===(['scan','simple','conc'][i])?'#d5e6fb':'#f0f2f4';g.fillRect(tx,y+42,84,19);g.strokeStyle='#acb8c8';g.strokeRect(tx+.5,y+42.5,83,18);g.fillStyle='#203d60';g.font='bold 8px Segoe UI,Arial';g.fillText(label,tx+6,y+54)});
+   // Plot area and axes inside the simulated app.
+   const gx=x+14,gy=y+69,gw=ww-30,gh=138;g.fillStyle='#fff';g.fillRect(gx,gy,gw,gh);g.strokeStyle='#c6d2df';g.lineWidth=.5;
+   for(let i=0;i<=5;i++){const xx=gx+i*gw/5,yy=gy+i*gh/5;g.beginPath();g.moveTo(xx,gy);g.lineTo(xx,gy+gh);g.moveTo(gx,yy);g.lineTo(gx+gw,yy);g.stroke()}
+   g.strokeStyle='#1b5fab';g.lineWidth=1.8;g.beginPath();for(let i=0;i<=90;i++){const t=i/90,nm=400-200*t;const signal=.04+.8*Math.exp(-.5*Math.pow((nm-246)/18,2))+.12*Math.exp(-.5*Math.pow((nm-205)/12,2));const px=gx+t*gw,py=gy+gh-(signal*gh);if(i===0)g.moveTo(px,py);else g.lineTo(px,py)}g.stroke();
+   g.fillStyle='#243a54';g.font='8px Segoe UI,Arial';g.fillText('Absorbance (AU)',gx+5,gy+10);g.fillText('Wavelength (nm)',gx+gw/2-35,gy+gh+11);
+   g.fillStyle='#dfe8f0';g.fillRect(x+8,y+221,ww-16,18);g.fillStyle='#20364b';g.font='8px Segoe UI,Arial';g.fillText('Status: '+(S.paused?'PAUSED':S.job?'MEASURING':'READY')+'   |   λ = '+Number(S.lam).toFixed(1)+' nm   |   Zero Blank: '+(S.base?'OK':'belum'),x+14,y+233);
+  }
+ }
+ scrT.needsUpdate=true;
+}
 // ---------- pengukuran
 function pre(){if(!desk())return'Komputer/monitor belum siap.';if(!S.inst)return'Instrumen belum menyala.';if(S.warm<WARM)return'Warm-up belum selesai.';if(S.lid)return'Tutup kompartemen sampel harus tertutup.';if(!S.cuv)return'Letakkan kuvet di holder sampel.';return''}
 function range(){const a=+$('s0').value,b=+$('s1').value;if(!(a>=190&&a<=900&&b>=190&&b<=900&&a>b)){toast('Masukkan λ awal lebih besar daripada λ akhir, dalam rentang 190–900 nm (contoh 400 ke 200).');return null}return[a,b]}
-function syncProcessButtons(){const b=$('bPause');if(b){b.disabled=!S.job&&!S.batchMeasuring;b.textContent=S.paused?'Lanjutkan proses':'Jeda proses';b.classList.toggle('on',!!S.paused)}const i=$('bIdentify');if(i){i.classList.toggle('on',!!S.identifyMode);i.textContent=S.identifyMode?'Tutup Kenali Bagian':'Kenali Bagian'}}
-function startJob(job){S.identifyMode=0;S.lbl=0;S.xray=0;$('bL').classList.remove('on');$('bX').classList.remove('on');S.job=job;S.measureVisual=1;S.paused=0;syncX();syncProcessButtons()}
+function syncProcessButtons(){const b=$('bPause');if(b){const running=!!(S.job||S.batchMeasuring);b.disabled=false;b.textContent=S.paused?(running?'Lanjutkan proses':'Lanjutkan animasi'):(running?'Jeda proses':'Jeda animasi');b.title=S.paused?'Lanjutkan animasi/proses':(running?'Jeda pengukuran dan animasi':'Jeda animasi visual');b.classList.toggle('on',!!S.paused)}const i=$('bIdentify');if(i){i.classList.toggle('on',!!S.identifyMode);i.textContent=S.identifyMode?'Tutup Kenali Bagian':'Kenali Bagian'}}
+function enterAnimationFocus(){
+ if(S.focusRestore)return;
+ S.focusRestore={
+  app:S.app,appMinimized:S.appMinimized,appHidden:$('app').hidden,
+  panelClasses:['hp','left-hidden','right-hidden'].filter(c=>document.body.classList.contains(c)),
+  xray:S.xray,lbl:S.lbl,identifyMode:S.identifyMode,measureVisual:S.measureVisual,
+  menuHidden:$('menuDrop').hidden,howtoHidden:$('howtoBackdrop').hidden
+ };
+ S.identifyMode=0;S.lbl=0;S.xray=0;
+ document.body.classList.add('focus-animation');
+ $('animationFocusHud').hidden=false;
+ // Cary WinUV disembunyikan dari layar dan dari modal, namun statusnya disimpan untuk dipulihkan.
+ S.appMinimized=1;$('app').hidden=true;$('menuDrop').hidden=true;$('howtoBackdrop').hidden=true;
+ $('bL').classList.remove('on');$('bX').classList.remove('on');
+ syncX();syncAnimationFocusHUD();drawScreen();
+ if(typeof resize==='function')requestAnimationFrame(()=>resize());
+}
+function exitAnimationFocus(){
+ const r=S.focusRestore;if(!r)return;
+ document.body.classList.remove('focus-animation','hp','left-hidden','right-hidden');
+ (r.panelClasses||[]).forEach(c=>document.body.classList.add(c));
+ S.app=r.app;S.appMinimized=r.appMinimized;S.xray=r.xray;S.lbl=r.lbl;S.identifyMode=r.identifyMode;S.measureVisual=r.measureVisual;
+ $('app').hidden=r.appHidden;$('menuDrop').hidden=r.menuHidden;$('howtoBackdrop').hidden=r.howtoHidden;
+ $('animationFocusHud').hidden=true;S.focusRestore=null;
+ $('bL').classList.toggle('on',!!S.lbl);$('bX').classList.toggle('on',!!(S.xray||S.identifyMode||S.measureVisual));
+ syncX();syncProcessButtons();updatePanelToggleUI();drawScreen();
+ if(typeof resize==='function')requestAnimationFrame(()=>resize());
+}
+function syncAnimationFocusHUD(){
+ const hud=$('animationFocusHud');if(!hud)return;
+ const running=!!(S.job||S.batchMeasuring);hud.hidden=!S.focusRestore;
+ if(!S.focusRestore)return;
+ let title='Proses optik berlangsung',detail='Panel dan tabel disembunyikan agar animasi instrumen terlihat penuh.';
+ const j=S.job;
+ if(S.paused){title='Proses dijeda';detail='Animasi dan waktu pengukuran berhenti. Lanjutkan untuk menyelesaikan pembacaan.'}
+ else if(j&&j.type==='base'){title='Zero Blank dengan aquades';detail='Instrumen sedang membaca blanko untuk menetapkan referensi dasar.'}
+ else if(j&&j.type==='scan'){title='Scan panjang gelombang · standar 25 ppm';detail='Monokromator sedang memindai '+j.start.toFixed(0)+'–'+j.stop.toFixed(0)+' nm. λ saat ini '+S.lam.toFixed(1)+' nm.'}
+ else if(j&&j.type==='simple'){title='Simple Reads · '+(j.solutionLabel||'Larutan');detail='Pembacaan replikasi '+Math.min(j.i+1,j.n)+' dari '+j.n+' pada λ '+j.l.toFixed(1)+' nm.'}
+ else if(j&&j.type==='read'){title='Pengukuran konsentrasi';detail='Pembacaan absorbansi sedang berlangsung pada λ '+j.l.toFixed(1)+' nm.'}
+ else if(S.batchMeasuring){title='Pengukuran deret standar 0–25 ppm';detail='Setiap standar diukur berurutan. Tabel dan panel akan kembali setelah seluruh standar selesai.'}
+ $('focusProcessName').textContent=title;$('focusProcessDetail').textContent=detail;
+ $('focusPause').textContent=S.paused?'Lanjutkan':'Jeda';$('focusPause').disabled=!running&&!S.paused;
+ $('focusStop').disabled=!running;$('focusIdentify').disabled=!running;
+}
+function syncAnimationFocus(){
+ const running=!!(S.job||S.batchMeasuring);
+ if(S.focusRestore&&!running)exitAnimationFocus();
+ else if(S.focusRestore)syncAnimationFocusHUD();
+}
+function startJob(job){enterAnimationFocus();S.identifyMode=0;S.lbl=0;S.xray=0;$('bL').classList.remove('on');$('bX').classList.remove('on');S.job=job;S.measureVisual=1;S.paused=0;syncX();syncProcessButtons();syncAnimationFocusHUD()}
 function finishJob(){S.job=null;S.paused=0;S.measureVisual=!!S.batchMeasuring;syncX();syncProcessButtons()}
 function startBase(){if(S.base){toast('Zero Blank sudah berhasil dilakukan. Proses ini hanya dilakukan satu kali per sesi.');return}const e=pre();if(e){toast(e);return}if($('smp').value!=='aquades'){toast('Pilih Aquades sebagai larutan kerja untuk Zero Blank.');return}setSample('blank');startJob({type:'base',l:S.lam,stop:S.lam,rate:0,t:0})}
 function start(){if(S.job||S.batchMeasuring){toast('Pengukuran sedang berjalan. Jeda atau hentikan sebelum memulai proses baru.');return}if(S.tab==='conc'){toast('Gunakan tombol Ukur / Ukur semua standar / Ukur sampel.');return}if(S.tab==='scan'){const e=pre();if(e){toast(e);return}if(!S.base){toast('Belum melakukan Zero Blank. Pilih aquades lalu tekan Zero Blank (Aquades).');return}if(S.solutionKey!=='std_25'||S.sample!=='std'||Number(S.conc)!==25){toast('Scan panjang gelombang hanya dapat dilakukan menggunakan Standar 25 ppm.');return}const r=range();if(!r)return;S.res={type:'scan',pts:[]};S.lmax=null;startJob({type:'scan',l:r[0],start:r[0],stop:r[1],rate:(r[1]-r[0])/8,last:r[0]+1,pts:S.res.pts});}
  else{const e=pre();if(e){toast(e);return}if(!S.base){toast('Belum melakukan Zero Blank. Pilih aquades lalu tekan Zero Blank (Aquades).');return}const l=+$('sl').value,n=Math.max(1,Math.min(10,+$('sn').value|0));if(!(l>=190&&l<=900)){toast('λ harus 190–900 nm.');return}S.lam=l;const selected=$('smp').options[$('smp').selectedIndex];const key=S.solutionKey||'aquades';const weight=key.startsWith('akurasi_')?(S.accuracyWeights[key]??0.005):null;const concentration=key.startsWith('std_')?Number(key.split('_')[1]):null;S.res={type:'simple',rows:[]};startJob({type:'simple',l,n,i:0,t:0,solutionKey:key,solutionLabel:selected?selected.textContent.trim():key,concentration,weight});}
  if(S.job&&!S.camOpt){S.camOpt=1;flyV('opt')}}
+function setAbsorbanceValue(id,value,sourceText){
+ const input=$(id);if(!input)return;S.isAutoFillingAbs=true;input.value=Number(value).toFixed(4);S.isAutoFillingAbs=false;
+ if(id==='aU'&&$('sampleAbsSource'))$('sampleAbsSource').textContent=sourceText||'Absorbansi terisi otomatis. Nilai tetap bisa diedit manual.';
+ if(id==='aSp'&&$('spikeAbsSource'))$('spikeAbsSource').textContent=sourceText||'Absorbansi sampel + spike terisi otomatis. Nilai tetap bisa diedit manual.';
+}
+function applyLastSimpleRead(){
+ const r=S.lastSampleRead;if(!r||!Number.isFinite(r.absorbance)){toast('Belum ada hasil pembacaan sampel yang bisa dipindahkan.');return}
+ if(r.key==='spike'){
+  setAbsorbanceValue('aSp',r.absorbance,'Terisi otomatis dari Simple Reads: '+r.solution+' (rata-rata '+r.replicates+' replikasi). Nilai ini tetap bisa diedit manual.');
+ }else if(r.key==='unk'||r.key.startsWith('pres_')||r.key.startsWith('akurasi_')){
+  setAbsorbanceValue('aU',r.absorbance,'Terisi otomatis dari Simple Reads: '+r.solution+' (rata-rata '+r.replicates+' replikasi). Nilai ini tetap bisa diedit manual.');
+ }else{toast('Pembacaan terakhir adalah '+r.solution+', bukan sampel atau sampel + spike.');return}
+ if(S.tab!=='conc')switchToTab('conc');else renderConc();renderRes();toast('Absorbansi berhasil dipindahkan ke Concentration. Kamu masih bisa mengedit nilainya.');
+}
 function runJob(dt){const j=S.job;if(!j||S.paused)return;
  if(j.type==='read'){j.t+=dt;if(j.t>=.8){j.t=0;j.vals.push(readA(j.l));if(j.vals.length>=j.n){finishJob();j.cb(j.vals)}}}
  else if(j.type==='base'){j.t=(j.t||0)+dt;S.lam=j.l;if(j.t>=1){S.base=1;finishJob();S.solutionKey='aquades';setSample('blank');updateSolutionGate();toast('Zero Blank aquades berhasil. Larutan lain kini dapat dipilih; Zero Blank tidak dapat diulang pada sesi ini.')}}
  else if(j.type==='scan'){const next=j.l+j.rate*dt;j.l=j.rate>=0?Math.min(j.stop,next):Math.max(j.stop,next);S.lam=j.l;if(Math.abs(j.l-j.last)>=1){j.last=j.l;j.pts.push([j.l,readA(j.l)])}
   const reached=j.rate>=0?j.l>=j.stop:j.l<=j.stop;if(reached){finishJob();toast('Scan selesai. λmax acuan data = '+DATA_LMAX_NM.toFixed(1)+' nm.')}}
- else{j.t+=dt;if(j.t>=1.2){j.t=0;const a=readA(j.l),pct=100*Math.pow(10,-a);j.i++;S.res.rows.push([j.i,j.l,a,pct]);S.simpleHistory.push({no:S.simpleHistory.length+1,solution:j.solutionLabel||j.solutionKey||'Larutan',key:j.solutionKey||'',concentration:j.concentration,weight:j.weight,replicate:j.i,lambda:j.l,abs:a,transmittance:pct});drawTable();if(j.i>=j.n){finishJob();toast('Simple Reads selesai. Hasil ditambahkan ke riwayat tabel.')}}}}
+ else{j.t+=dt;if(j.t>=1.2){j.t=0;const a=readA(j.l),pct=100*Math.pow(10,-a);j.i++;S.res.rows.push([j.i,j.l,a,pct]);S.simpleHistory.push({no:S.simpleHistory.length+1,solution:j.solutionLabel||j.solutionKey||'Larutan',key:j.solutionKey||'',concentration:j.concentration,weight:j.weight,replicate:j.i,lambda:j.l,abs:a,transmittance:pct});drawTable();if(j.i>=j.n){
+  const measuredRows=S.simpleHistory.slice(-j.n),avgAbs=measuredRows.reduce((sum,row)=>sum+row.abs,0)/Math.max(1,measuredRows.length);
+  S.lastSampleRead={key:j.solutionKey||'',solution:j.solutionLabel||j.solutionKey||'Larutan',absorbance:avgAbs,replicates:measuredRows.length,concentration:j.concentration,weight:j.weight,lambda:j.l};
+  finishJob();
+  const k=S.lastSampleRead.key;
+  if(k==='unk'||k.startsWith('pres_')||k.startsWith('akurasi_')){
+   setAbsorbanceValue('aU',avgAbs,'Terisi otomatis dari Simple Reads: '+S.lastSampleRead.solution+' (rata-rata '+measuredRows.length+' replikasi). Kamu tetap bisa mengedit nilai ini secara manual.');
+   switchToTab('conc');renderConc();toast('Sampel terbaca. Absorbansi rata-rata '+avgAbs.toFixed(4)+' otomatis dikirim ke Concentration.');
+  }else if(k==='spike'){
+   setAbsorbanceValue('aSp',avgAbs,'Terisi otomatis dari Simple Reads: '+S.lastSampleRead.solution+' (rata-rata '+measuredRows.length+' replikasi). Kamu tetap bisa mengedit nilai ini secara manual.');
+   switchToTab('conc');renderConc();toast('Sampel + spike terbaca. Absorbansi rata-rata '+avgAbs.toFixed(4)+' otomatis dikirim ke Concentration.');
+  }else toast('Simple Reads selesai. Hasil ditambahkan ke riwayat tabel.');
+ }}}}
 // ---------- λ maks (puncak spektrum, dihaluskan + interpolasi parabola)
 function lmaxOf(p){if(!p||p.length<5)return null;const n=p.length,sm=p.map((q,i)=>{let s=0,c=0;for(let k=-2;k<=2;k++){const j=i+k;if(j>=0&&j<n){s+=p[j][1];c++}}return s/c});
  let k=0;sm.forEach((v,i)=>{if(v>sm[k])k=i});let l=p[k][0],a=sm[k];
@@ -615,7 +795,8 @@ function updLb(){const rect=ren.domElement.getBoundingClientRect(),w=rect.width,
 const CHK=[['UPS menyala',()=>S.ups],['Instrumen menyala',()=>S.inst],['Komputer menyala',()=>S.pc],['Monitor menyala',()=>S.mon],['Warm-up selesai',()=>S.inst&&S.warm>=WARM],['Cary WinUV dibuka',()=>S.app],['Zero Blank aquades',()=>S.base],['Kuvet terpasang',()=>S.cuv],['Tutup tertutup',()=>!S.lid]];
 function renderOpticalStatus(){
  const el=$('opticalStatus');if(!el)return;
- const visible=!!S.inst&&S.warm>=WARM&&(!S.app||S.appMinimized);
+ const processRunning=!!(S.job||S.batchMeasuring);
+ const visible=!!S.inst&&S.warm>=WARM&&processRunning;
  el.hidden=!visible;if(!visible)return;
  const source=S.lam>=350?'lampu tungsten':'lampu deuterium';
  const phases=[
@@ -668,19 +849,26 @@ $('bX').onclick=()=>{
  syncX();syncProcessButtons();$('bX').classList.toggle('on',!!(S.xray||S.identifyMode||S.measureVisual));
 };
 $('bB').onclick=()=>S.beam=S.beam?0:1;
-$('bR').onclick=e=>{ctl.autoRotate=!ctl.autoRotate;e.target.classList.toggle('on',ctl.autoRotate)};$('bA').onclick=()=>{if(S.app&&S.appMinimized){S.appMinimized=0;$('app').hidden=false;drawScreen();renderUI();toast('Cary WinUV dibuka kembali.')}else openApp(true)};$('minApp').onclick=minimizeApp;$('xapp').onclick=()=>openApp(false);
+S.autoRotateWanted=false;$('bR').onclick=e=>{S.autoRotateWanted=!S.autoRotateWanted;ctl.autoRotate=S.autoRotateWanted&&!S.paused;e.target.classList.toggle('on',S.autoRotateWanted)};$('bA').onclick=()=>{if(S.app&&S.appMinimized){S.appMinimized=0;$('app').hidden=false;drawScreen();renderUI();toast('Cary WinUV dibuka kembali.')}else openApp(true)};$('minApp').onclick=minimizeApp;$('xapp').onclick=()=>openApp(false);
 $('bFS').onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>toast('Layar penuh diblokir browser.'))};$('bRe').onclick=()=>location.reload();
-$('aBase').onclick=startBase;$('aStart').onclick=start;$('aStop').onclick=()=>{S.batchMeasuring=0;S.measureVisual=0;S.paused=0;finishJob();toast('Proses dihentikan.');};$('aCsv').onclick=csv;$('cAll').onclick=()=>{if(S.job||S.batchMeasuring){toast('Pengukuran sedang berjalan.');return}if(!S.base){toast('Lakukan Zero Blank aquades terlebih dahulu.');return}S.batchMeasuring=1;S.measureVisual=1;syncProcessButtons();measStd(0,true)};$('cFit').onclick=()=>calc(false);$('cUnk').onclick=measUnk;$('cSpk').onclick=measSpk;
+$('aBase').onclick=startBase;$('aStart').onclick=start;$('aStop').onclick=()=>{S.batchMeasuring=0;S.measureVisual=0;S.paused=0;finishJob();toast('Proses dihentikan.');};$('aCsv').onclick=csv;$('cAll').onclick=()=>{if(S.job||S.batchMeasuring){toast('Pengukuran sedang berjalan.');return}if(!S.base){toast('Lakukan Zero Blank aquades terlebih dahulu.');return}enterAnimationFocus();S.batchMeasuring=1;S.measureVisual=1;syncProcessButtons();syncAnimationFocusHUD();measStd(0,true)};$('cFit').onclick=()=>calc(false);$('cUnk').onclick=measUnk;$('cSpk').onclick=measSpk;
 $('cClr').onclick=()=>{S.cal.std.forEach(s=>{s.a=null;s.sd=null});S.cal.fit=null;$('aU').value='';$('aSp').value='';renderConc()};
 $('cAddStd').onclick=()=>{const C=S.cal,last=C.std.length?C.std[C.std.length-1].c:0;C.std.push({c:last+5,a:null,sd:null});C.fit=null;calc(true)};
 const useL=()=>{if(S.lmax){const v=Math.round(S.lmax.l*10)/10;$('cl').value=v;$('sl').value=v;S.cal.l=v;toast('λ analisis = '+v+' nm (dari λmax scan).');drawCal()}else toast('Lakukan Scan dulu untuk mendapatkan λmax.')};
 $('bUseL').onclick=useL;$('cUseL').onclick=useL;$('cl').onchange=()=>{S.cal.l=+$('cl').value;drawCal()};
 ['massa','vol','df','tabw','aU','aSp','cAdd'].forEach(id=>$(id).oninput=()=>{S.spkC=+$('cAdd').value||0;renderRes()});
+$('aU').addEventListener('change',()=>{if(!S.isAutoFillingAbs&&$('sampleAbsSource'))$('sampleAbsSource').textContent='Nilai absorbansi diinput atau diedit manual. Pengisian manual tetap didukung.'});
+$('aSp').addEventListener('change',()=>{if(!S.isAutoFillingAbs&&$('spikeAbsSource'))$('spikeAbsSource').textContent='Nilai absorbansi sampel + spike diinput atau diedit manual.'});
+$('applyLastRead').onclick=applyLastSimpleRead;
+$('applyLastSpike').onclick=()=>{const r=S.lastSampleRead;if(!r||r.key!=='spike'){toast('Belum ada pembacaan sampel + spike terakhir. Ukur sampel + spike pada Simple Reads dahulu.');return}applyLastSimpleRead()};
 $('accuracyWeight').oninput=()=>{const key=S.solutionKey||'';const value=parseFloat($('accuracyWeight').value);if(key.startsWith('akurasi_')&&isFinite(value)&&value>0){S.accuracyWeights[key]=value;$('massa').value=value;renderRes()}};
 $('massa').addEventListener('change',()=>{const key=S.solutionKey||'';const value=parseFloat($('massa').value);if(key.startsWith('akurasi_')&&isFinite(value)&&value>0){S.accuracyWeights[key]=value;$('accuracyWeight').value=value}});
 $('aRefresh').onclick=()=>{if(S.job||S.batchMeasuring){toast('Jeda atau hentikan pengukuran sebelum mereset tabel.');return}S.simpleHistory=[];drawTable();toast('Riwayat Simple Reads telah direset. Data kalibrasi tidak dihapus.')};
 $('bL').onclick=()=>{if(!S.identifyMode){toast('Aktifkan Transparan atau Kenali Bagian terlebih dahulu.');return}S.lbl=S.lbl?0:1;$('bL').classList.toggle('on',!!S.lbl);if(S.lbl)showIdentifyGuide()};
-$('bPause').onclick=()=>{if(!S.job&&!S.batchMeasuring){toast('Tidak ada proses pengukuran yang berjalan.');return}if(S.paused){if(S.identifyMode){toast('Tutup mode Kenali Bagian sebelum melanjutkan pengukuran.');return}S.paused=0;if(S.resumeAppAfterIdentify){S.app=1;$('app').hidden=false;S.resumeAppAfterIdentify=0;drawScreen()}toast('Pengukuran dilanjutkan.')}else{S.paused=1;toast('Pengukuran dijeda. Pilih Kenali Bagian untuk mempelajari komponen.')}syncProcessButtons()};
+$('focusPause').onclick=()=>{$('bPause').click()};
+$('focusStop').onclick=()=>{S.batchMeasuring=0;S.measureVisual=0;S.paused=0;finishJob();syncAnimationFocusHUD();toast('Proses dihentikan. Tampilan akan dikembalikan.');};
+$('focusIdentify').onclick=()=>{if(!(S.job||S.batchMeasuring))return;if(!S.paused)S.paused=1;exitAnimationFocus();syncProcessButtons();$('bIdentify').click();syncAnimationFocusHUD()};
+$('bPause').onclick=()=>{const running=!!(S.job||S.batchMeasuring);if(S.paused){if(S.identifyMode){toast('Tutup mode Kenali Bagian sebelum melanjutkan animasi/proses.');return}S.paused=0;if(S.resumeAppAfterIdentify){S.app=1;$('app').hidden=false;S.resumeAppAfterIdentify=0;S.appMinimized=0;drawScreen()}if(running)enterAnimationFocus();toast(running?'Pengukuran dan animasi dilanjutkan.':'Animasi instrumen dilanjutkan.')}else{S.paused=1;toast(running?'Pengukuran dan animasi dijeda.':'Animasi instrumen dijeda. Klik Lanjutkan animasi untuk meneruskan.')}syncProcessButtons();syncAnimationFocusHUD()};
 $('bIdentify').onclick=()=>{
  if(!S.identifyMode){
   if((S.job||S.batchMeasuring)&&!S.paused){S.paused=1;toast('Pengukuran dijeda untuk mengenali bagian alat.')}
@@ -740,7 +928,14 @@ $('closeHowto').onclick=()=>{$('howtoBackdrop').hidden=true};
 $('howtoBackdrop').addEventListener('click',e=>{if(e.target===$('howtoBackdrop'))$('howtoBackdrop').hidden=true});
 document.addEventListener('click',e=>{if(!$('menuWrap').contains(e.target))$('menuDrop').hidden=true});
 $('lmMode').onchange=e=>{S.lampMode=e.target.value};$('lmColor').oninput=e=>{S.lampColor=e.target.value;S.lampMode='manual';$('lmMode').value='manual'};$('lmI').oninput=e=>{S.lampI=+e.target.value};document.querySelectorAll('[data-lc]').forEach(b=>b.onclick=()=>{S.lampColor=b.dataset.lc;$('lmColor').value=b.dataset.lc;S.lampMode='manual';$('lmMode').value='manual'});
-document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(S.job||S.batchMeasuring){toast('Jeda atau selesaikan pengukuran sebelum mengganti mode.');return}S.tab=b.dataset.t;document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));$('p-scan').hidden=S.tab!=='scan';$('p-simple').hidden=S.tab!=='simple';$('p-conc').hidden=S.tab!=='conc';$('scanBox').hidden=S.tab!=='scan';$('simpleHistorySection').hidden=S.tab!=='simple';$('cres').hidden=S.tab!=='conc';$('graphHeading').textContent=S.tab==='conc'?'Kurva kalibrasi: X = Konsentrasi (ppm), Y = Absorbansi (AU)':S.tab==='scan'?'Spektrum: Panjang gelombang (nm) dan absorbansi':'Grafik pembacaan Simple Reads';if(S.tab==='conc')renderConc();S.res=null;updateSolutionGate();drawTable();drawChart()});
+function switchToTab(tab){
+ if(S.job||S.batchMeasuring){toast('Selesaikan atau jeda pengukuran sebelum mengganti mode.');return false}
+ S.tab=tab;document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x.dataset.t===S.tab));
+ $('p-scan').hidden=S.tab!=='scan';$('p-simple').hidden=S.tab!=='simple';$('p-conc').hidden=S.tab!=='conc';$('scanBox').hidden=S.tab!=='scan';$('simpleHistorySection').hidden=S.tab!=='simple';$('cres').hidden=S.tab!=='conc';
+ $('graphHeading').textContent=S.tab==='conc'?'Kurva kalibrasi: X = Konsentrasi (ppm), Y = Absorbansi (AU)':S.tab==='scan'?'Spektrum: Panjang gelombang (nm) dan absorbansi':'Grafik pembacaan Simple Reads';
+ if(S.tab==='conc')renderConc();S.res=null;updateSolutionGate();drawTable();drawChart();return true;
+}
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>switchToTab(b.dataset.t));
 const V={front:[[-1,5.5,12],[1,.8,0]],top:[[1,16,.1],[1,0,0]],back:[[1,5,-12],[1,.8,0]],side:[[14,4,3],[0,.8,0]],inst:[[-3.2,4.5,6.5],[-3.2,.7,.5]],cuv:[[-3.2,2.6,3.6],[-3.2,.8,.9]],mon:[[5,2.2,4.5],[5,1.2,-.6]],opt:[[-3.2,7.2,2.6],[-3.2,.8,-.1]],lamp:[[-6.8,2.2,.9],[-5.6,.8,-1.5]]};
 let fly=null;function flyV(k){const v=V[k];fly={t:0,p0:cam.position.clone(),t0:ctl.target.clone(),p1:new THREE.Vector3(...v[0]),t1:new THREE.Vector3(...v[1])}}document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>flyV(b.dataset.v));
 // klik 3D
@@ -753,29 +948,32 @@ ren.domElement.addEventListener('pointermove',e=>{ren.domElement.style.cursor=pi
 function resize(){const rect=ren.domElement.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height);ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 // ---------- loop
 const B={vis:0,T:1,sOn:true};const clk=new THREE.Clock();let xk=0,uiT=0,chA=0,lastLamp=0;const col=new THREE.Color(),beamCol=new THREE.Color(),tA=new THREE.Color(),tB=new THREE.Color();
-setLiq();syncX();$('conc').disabled=true;$('opticalStatus').hidden=true;$('cres').hidden=true;$('simpleHistorySection').hidden=true;$('graphHeading').textContent='Spektrum: Panjang gelombang (nm) dan absorbansi';updatePanelToggleUI();updateAccuracyWeightUI(S.solutionKey);updateSolutionGate();syncProcessButtons();drawTable();
-function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1);
- if(S.inst)S.warm=Math.min(WARM,S.warm+dt);if(S.pc&&!S.booted){S.bootT+=dt;if(S.bootT>4)S.booted=1}
- runJob(dt);
- if(fly){fly.t=Math.min(1,fly.t+dt/.9);const k=fly.t*fly.t*(3-2*fly.t);cam.position.lerpVectors(fly.p0,fly.p1,k);ctl.target.lerpVectors(fly.t0,fly.t1,k);if(fly.t>=1)fly=null}
- ctl.update();
- // animasi objek
- const lt=S.lid?-1.6:0;lid.rotation.x+=(lt-lid.rotation.x)*Math.min(1,dt*5);
- cuvK+=((S.cuv?1:0)-cuvK)*Math.min(1,dt*5);cuvS.position.set(1.6*(1-cuvK),.18+(.8-.18)*cuvK+Math.sin(Math.PI*cuvK)*.5,3+(.95-3)*cuvK);
+setLiq();syncX();$('animationFocusHud').hidden=true;$('conc').disabled=true;$('opticalStatus').hidden=true;$('cres').hidden=true;$('simpleHistorySection').hidden=true;$('graphHeading').textContent='Spektrum: Panjang gelombang (nm) dan absorbansi';updatePanelToggleUI();updateAccuracyWeightUI(S.solutionKey);updateSolutionGate();syncProcessButtons();drawTable();
+function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1);const animDt=S.paused?0:dt;if(!S.paused)S.visualTime+=dt;const visualMs=S.visualTime*1000;
+ if(S.inst)S.warm=Math.min(WARM,S.warm+animDt);if(S.pc&&!S.booted){S.bootT+=animDt;if(S.bootT>4)S.booted=1}
+ runJob(animDt);syncAnimationFocus();
+  if(fly){fly.t=Math.min(1,fly.t+dt/.9);const k=fly.t*fly.t*(3-2*fly.t);cam.position.lerpVectors(fly.p0,fly.p1,k);ctl.target.lerpVectors(fly.t0,fly.t1,k);if(fly.t>=1)fly=null}
+ ctl.autoRotate=!!S.autoRotateWanted&&!S.paused;ctl.update();
+ // Animasi mekanik mengikuti satu clock. Saat dijeda, posisi semua komponen tetap konstan.
+ const lt=S.lid?-1.6:0;lid.rotation.x+=(lt-lid.rotation.x)*Math.min(1,animDt*5);
+ cuvK+=((S.cuv?1:0)-cuvK)*Math.min(1,animDt*5);cuvS.position.set(1.6*(1-cuvK),.18+(.8-.18)*cuvK+Math.sin(Math.PI*cuvK)*.5,3+(.95-3)*cuvK);
  rocker.rotation.x=S.inst?-.3:.3;ledM.emissive.setHex(S.inst?0x00ff00:0);ledM.color.setHex(S.inst?0x22ff22:0x114411);
  upsLed.forEach((l,i)=>{const on=S.ups;l.material.emissive.setHex(on?0x00ff00:0);l.material.color.setHex(on?0x22ff22:0x114411)});
  pcLed.material.emissive.setHex(S.pc?0x00ff00:0);monLed.material.emissive.setHex(S.mon?0x00ff00:0);
- const transparentTarget=(S.xray||S.identifyMode||S.measureVisual)?1:0;xk+=(transparentTarget-xk)*Math.min(1,dt*4);shW.opacity=shD.opacity=1-.88*xk;shW.depthWrite=shD.depthWrite=xk<.05;shells.forEach(s=>{s.e.visible=xk>.02;s.e.material.opacity=(S.identifyMode?xk*.9:0)});
+ const transparentTarget=(S.xray||S.identifyMode||S.measureVisual)?1:0;xk+=(transparentTarget-xk)*Math.min(1,animDt*4);shW.opacity=shD.opacity=1-.88*xk;shW.depthWrite=shD.depthWrite=xk<.05;shells.forEach(s=>{s.e.visible=xk>.02;s.e.material.opacity=(S.identifyMode?xk*.9:0)});
  // Simulasi proses optik: sumber broadband -> kisi pemilih λ -> chopper double-beam -> kuvet -> detektor.
  const lampOn=S.inst&&S.warm>2;
- const LA=lampOn?(S.lam>=350?'v':'d'):null,mn=S.lampMode==='manual',cV=mn?tA.set(S.lampColor):tA.set(AUTO_V),cD=mn?tB.set(S.lampColor):tB.set(AUTO_D),fl=1+.035*Math.sin(performance.now()*.045);
+ const processRunning=!!(S.job||S.batchMeasuring);
+ const transparentOptics=!!(S.xray||S.identifyMode||S.measureVisual||xk>.25);
+ const sourceGlowBoost=(transparentOptics&&processRunning)?1.9:(transparentOptics?1.35:1);
+ const LA=lampOn?(S.lam>=350?'v':'d'):null,mn=S.lampMode==='manual',cV=mn?tA.set(S.lampColor):tA.set(AUTO_V),cD=mn?tB.set(S.lampColor):tB.set(AUTO_D),fl=1+.055*Math.sin(visualMs*.045);
  const sourceBeamCol=LA==='d'?cD:LA==='v'?cV:col.set(0xbfd7ed);
- lampVM.color.copy(LA==='v'?cV:new THREE.Color(0x442200));lampVM.emissive.copy(cV).multiplyScalar(LA==='v'?3.6*S.lampI*fl:0);
- bulbVM.color.copy(LA==='v'?cV:cOff);bulbVM.opacity=LA==='v'?.98:.3;bulbVM.emissive.copy(cV).multiplyScalar(LA==='v'?1.8*S.lampI*fl:0);
- lampD.material.color.copy(LA==='d'?cD:cOff);lampD.material.opacity=LA==='d'?.98:.4;lampD.material.emissive.copy(cD).multiplyScalar(LA==='d'?2.4*S.lampI*fl:0);
- d2Win.material.color.copy(LA==='d'?cD:cOff);d2Win.material.emissive.copy(cD).multiplyScalar(LA==='d'?3.4*S.lampI*fl:0);
- lightV.color.copy(cV);lightV.intensity=LA==='v'?(1.0+1.8*xk)*S.lampI:0;lightD.color.copy(cD);lightD.intensity=LA==='d'?(1.0+1.8*xk)*S.lampI:0;
- sel.position.y+=((LA==='d'?BY:BY+.38)-sel.position.y)*Math.min(1,dt*6);
+ lampVM.color.copy(LA==='v'?cV:new THREE.Color(0x442200));lampVM.emissive.copy(cV).multiplyScalar(LA==='v'?4.2*S.lampI*fl*sourceGlowBoost:0);
+ bulbVM.color.copy(LA==='v'?cV:cOff);bulbVM.opacity=LA==='v'?.99:.3;bulbVM.emissive.copy(cV).multiplyScalar(LA==='v'?2.8*S.lampI*fl*sourceGlowBoost:0);
+ lampD.material.color.copy(LA==='d'?cD:cOff);lampD.material.opacity=LA==='d'?.99:.4;lampD.material.emissive.copy(cD).multiplyScalar(LA==='d'?3.8*S.lampI*fl*sourceGlowBoost:0);
+ d2Win.material.color.copy(LA==='d'?cD:cOff);d2Win.material.emissive.copy(cD).multiplyScalar(LA==='d'?4.8*S.lampI*fl*sourceGlowBoost:0);
+ lightV.color.copy(cV);lightV.intensity=LA==='v'?(1.1+2.4*xk)*S.lampI*sourceGlowBoost:0;lightD.color.copy(cD);lightD.intensity=LA==='d'?(1.1+2.4*xk)*S.lampI*sourceGlowBoost:0;
+ sel.position.y+=((LA==='d'?BY:BY+.38)-sel.position.y)*Math.min(1,animDt*6);
  // Chopper berputar dan memisahkan berkas sampel/referensi secara bergantian.
  chop.rotation.y+=(S.paused?0:(S.inst?(S.job?7.2:3.7):0))*dt;grat.rotation.y=(S.lam-190)/710*.8;
  beamCol.setRGB(...W(S.lam));col.copy(beamCol);mC.color.copy(sourceBeamCol);mMono.color.copy(beamCol);[mS1,mS2,mR].forEach(m=>m.color.copy(beamCol));mLV.color.copy(cV);mLD.color.copy(cD);
@@ -786,9 +984,9 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1)
  spectralFan.forEach((f,i)=>{f.mat.opacity=opticReveal&&vis?(i===fanIndex?.78:.045):0});
  beamGlowMeshes.forEach(q=>{q.glow.material.color.copy(q.base.color);q.glow.material.opacity=Math.min(.42,q.base.opacity*.4);q.glow.visible=q.base.opacity>.018});
  // Detektor menerima sinyal yang berdenyut; intensitas ikut berkurang mengikuti absorbansi sampel.
- const pulseBeat=.72+.28*Math.sin(performance.now()*.012);detectorSignalMat.color.copy(beamCol);detectorSignalMat.emissive.copy(beamCol).multiplyScalar(vis?(.15+T*.95)*pulseBeat:0);detectorSignalMat.opacity=vis?(.22+.62*T*pulseBeat):.08;detectorSignal.scale.setScalar(.7+.42*pulseBeat*T);
+ const pulseBeat=.72+.28*Math.sin(visualMs*.012);detectorSignalMat.color.copy(beamCol);detectorSignalMat.emissive.copy(beamCol).multiplyScalar(vis?(.15+T*.95)*pulseBeat:0);detectorSignalMat.opacity=vis?(.22+.62*T*pulseBeat):.08;detectorSignal.scale.setScalar(.7+.42*pulseBeat*T);
  pmtM.emissive.setRGB(beamCol.r*(.15+T*.8)*vis*pulseBeat,beamCol.g*(.15+T*.8)*vis*pulseBeat,beamCol.b*(.15+T*.8)*vis*pulseBeat);
- halos.forEach(q=>{const lh=q.t==='lv'||q.t==='ld';q.m.color.copy(q.t==='lv'?cV:q.t==='ld'?cD:beamCol);const f=lh?((q.t==='lv'?LA==='v':LA==='d')?(1+.07*Math.sin(performance.now()*.045))*Math.min(1.15,.6+.45*S.lampI):0):q.t==='c'?1:q.t==='s1'?(sOn?1:.12):q.t==='s2'?(sOn?1:.12)*(.08+.92*T):q.t==='r'?(sOn?.12:1):.25+.75*T;q.m.opacity=Math.min(1,(lh?.98:.9)*(lh?1:vis)*f)});
+ halos.forEach(q=>{const lh=q.t==='lv'||q.t==='ld';q.m.color.copy(q.t==='lv'?cV:q.t==='ld'?cD:beamCol);const f=lh?((q.t==='lv'?LA==='v':LA==='d')?(1+.09*Math.sin(visualMs*.045))*Math.min(1.15,.65+.45*S.lampI):0):q.t==='c'?1:q.t==='s1'?(sOn?1:.12):q.t==='s2'?(sOn?1:.12)*(.08+.92*T):q.t==='r'?(sOn?.12:1):.25+.75*T;if(lh&&q.s){const glowScale=q.baseScale*(transparentOptics?1.55:1)*(processRunning?1.18:1);q.s.scale.set(glowScale,glowScale,1);q.s.renderOrder=transparentOptics?30:11}q.m.opacity=Math.min(1,(lh?.99:.9)*(lh?1:vis)*f*(lh?sourceGlowBoost:1))});
  // Foton bergerak kontinu sepanjang jalur 3D, berubah warna setelah kisi, lalu bergantian pada chopper.
  if(!S.paused)S.opticalClock=(S.opticalClock||0)+dt*(S.job||S.batchMeasuring?2.15:.72);
  const photonSpeed=S.job?5.8:2.5;
@@ -804,7 +1002,7 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1)
   p.s.scale.setScalar(.038*sz*absorb);p.glow.scale.set(.25*sz*absorb,.25*sz*absorb,1);
  });
  // UI
- drawScreen();updLb();drawSch();uiT+=dt;if(uiT>.15){uiT=0;renderUI();renderOpticalStatus();if(S.app&&!S.appMinimized){if(S.tab==='scan'||S.tab==='conc'||S.job)drawChart();if(S.tab==='simple')drawTable()}}
+ drawScreen();updLb();drawSch();if(S.focusRestore)syncAnimationFocusHUD();uiT+=dt;if(uiT>.15){uiT=0;renderUI();renderOpticalStatus();if(S.app&&!S.appMinimized){if(S.tab==='scan'||S.tab==='conc'||S.job)drawChart();if(S.tab==='simple')drawTable()}}
  ren.render(scene,cam)}
 renderConc();
 loop();
