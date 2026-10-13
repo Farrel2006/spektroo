@@ -782,7 +782,7 @@ function drawSch(){const c=$('schc'),g=c.getContext('2d'),w=c.width,h=c.height;g
  [[.95,1],[.05,0]].forEach(a=>{g.fillStyle=a[1]&&!S.cuv?'rgba(150,200,255,.12)':'rgba(150,200,255,.55)';g.fillRect(X(-.15),Y(a[0]-.15),X(.15)-X(-.15),Y(a[0]+.15)-Y(a[0]-.15))});
  g.strokeStyle='#e8eef5';g.lineWidth=3;MIRS.forEach(m=>{const dx=Math.cos(m[2])*.2,dz=-Math.sin(m[2])*.2;g.beginPath();g.moveTo(X(m[0]-dx),Y(m[1]-dz));g.lineTo(X(m[0]+dx),Y(m[1]+dz));g.stroke()});
  g.fillStyle='#b08d2a';g.fillRect(X(-1.9)-3,Y(-.6)-8,6,16);g.fillStyle='#777';g.beginPath();g.arc(X(-1.1),Y(.5),9,0,7);g.fill();g.fillStyle='#889';g.beginPath();g.arc(X(2.3),Y(.5),8,0,7);g.fill();
- const lv=S.inst&&S.warm>2&&S.lam>=350,ld=S.inst&&S.warm>2&&S.lam<350,mn=S.lampMode==='manual',c1=mn?S.lampColor:AUTO_V,c2=mn?S.lampColor:AUTO_D;
+ const diagramReveal=!!(S.xray||S.identifyMode||S.measureVisual),lv=diagramReveal&&S.inst&&S.warm>2&&S.lam>=350,ld=diagramReveal&&S.inst&&S.warm>2&&S.lam<350,mn=S.lampMode==='manual',c1=mn?S.lampColor:AUTO_V,c2=mn?S.lampColor:AUTO_D;
  g.shadowColor=c1;g.shadowBlur=lv?18:0;g.fillStyle=lv?c1:'#555';g.beginPath();g.arc(X(-2.6),Y(-1.7),9,0,7);g.fill();
  g.shadowColor=c2;g.shadowBlur=ld?18:0;g.fillStyle=ld?c2:'#555';g.beginPath();g.arc(X(-2.2),Y(-1.2),8,0,7);g.fill();g.shadowBlur=0;
  if(v){g.fillStyle='#fff';pulses.forEach(p=>{g.beginPath();g.arc(X(p.s.position.x),Y(p.s.position.z),2.4,0,7);g.fill()})}
@@ -964,29 +964,30 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1)
  // Simulasi proses optik: sumber broadband -> kisi pemilih λ -> chopper double-beam -> kuvet -> detektor.
  const lampOn=S.inst&&S.warm>2;
  const processRunning=!!(S.job||S.batchMeasuring);
+ // Komponen optik internal, lampu, halo, dan berkas hanya boleh tampil saat Transparan/Kenali aktif atau animasi pengukuran sedang berjalan.
  const transparentOptics=!!(S.xray||S.identifyMode||S.measureVisual||xk>.25);
  const sourceGlowBoost=(transparentOptics&&processRunning)?1.9:(transparentOptics?1.35:1);
  const LA=lampOn?(S.lam>=350?'v':'d'):null,mn=S.lampMode==='manual',cV=mn?tA.set(S.lampColor):tA.set(AUTO_V),cD=mn?tB.set(S.lampColor):tB.set(AUTO_D),fl=1+.055*Math.sin(visualMs*.045);
  const sourceBeamCol=LA==='d'?cD:LA==='v'?cV:col.set(0xbfd7ed);
- lampVM.color.copy(LA==='v'?cV:new THREE.Color(0x442200));lampVM.emissive.copy(cV).multiplyScalar(LA==='v'?4.2*S.lampI*fl*sourceGlowBoost:0);
- bulbVM.color.copy(LA==='v'?cV:cOff);bulbVM.opacity=LA==='v'?.99:.3;bulbVM.emissive.copy(cV).multiplyScalar(LA==='v'?2.8*S.lampI*fl*sourceGlowBoost:0);
- lampD.material.color.copy(LA==='d'?cD:cOff);lampD.material.opacity=LA==='d'?.99:.4;lampD.material.emissive.copy(cD).multiplyScalar(LA==='d'?3.8*S.lampI*fl*sourceGlowBoost:0);
- d2Win.material.color.copy(LA==='d'?cD:cOff);d2Win.material.emissive.copy(cD).multiplyScalar(LA==='d'?4.8*S.lampI*fl*sourceGlowBoost:0);
- lightV.color.copy(cV);lightV.intensity=LA==='v'?(1.1+2.4*xk)*S.lampI*sourceGlowBoost:0;lightD.color.copy(cD);lightD.intensity=LA==='d'?(1.1+2.4*xk)*S.lampI*sourceGlowBoost:0;
+ lampVM.color.copy(LA==='v'&&transparentOptics?cV:new THREE.Color(0x442200));lampVM.emissive.copy(cV).multiplyScalar(transparentOptics&&LA==='v'?4.2*S.lampI*fl*sourceGlowBoost:0);
+ bulbVM.color.copy(transparentOptics&&LA==='v'?cV:cOff);bulbVM.opacity=transparentOptics&&LA==='v'?.99:0;bulbVM.emissive.copy(cV).multiplyScalar(transparentOptics&&LA==='v'?2.8*S.lampI*fl*sourceGlowBoost:0);
+ lampD.material.color.copy(transparentOptics&&LA==='d'?cD:cOff);lampD.material.opacity=transparentOptics&&LA==='d'?.99:0;lampD.material.emissive.copy(cD).multiplyScalar(transparentOptics&&LA==='d'?3.8*S.lampI*fl*sourceGlowBoost:0);
+ d2Win.material.color.copy(transparentOptics&&LA==='d'?cD:cOff);d2Win.material.emissive.copy(cD).multiplyScalar(transparentOptics&&LA==='d'?4.8*S.lampI*fl*sourceGlowBoost:0);
+ lightV.color.copy(cV);lightV.intensity=transparentOptics&&LA==='v'?(1.1+2.4*xk)*S.lampI*sourceGlowBoost:0;lightD.color.copy(cD);lightD.intensity=transparentOptics&&LA==='d'?(1.1+2.4*xk)*S.lampI*sourceGlowBoost:0;
  sel.position.y+=((LA==='d'?BY:BY+.38)-sel.position.y)*Math.min(1,animDt*6);
  // Chopper berputar dan memisahkan berkas sampel/referensi secara bergantian.
  chop.rotation.y+=(S.paused?0:(S.inst?(S.job?7.2:3.7):0))*dt;grat.rotation.y=(S.lam-190)/710*.8;
  beamCol.setRGB(...W(S.lam));col.copy(beamCol);mC.color.copy(sourceBeamCol);mMono.color.copy(beamCol);[mS1,mS2,mR].forEach(m=>m.color.copy(beamCol));mLV.color.copy(cV);mLD.color.copy(cD);
- const T=S.cuv&&!S.lid?Math.pow(10,-specA(S.lam)):1;const vis=S.beam&&lampOn?1:0;const sOn=Math.sin(chop.rotation.y*2)>0;B.vis=vis;B.T=T;B.sOn=sOn;
- mC.opacity=.88*vis;mMono.opacity=.94*vis;mLV.opacity=.96*(S.beam&&LA==='v'?1:0);mLD.opacity=.96*(S.beam&&LA==='d'?1:0);mS1.opacity=.92*vis*(sOn?1:.12);mR.opacity=.92*vis*(sOn?.12:1);mS2.opacity=.92*vis*(sOn?1:.12)*(.08+.92*T);
+ const T=S.cuv&&!S.lid?Math.pow(10,-specA(S.lam)):1;const vis=S.beam&&lampOn&&transparentOptics?1:0;const sOn=Math.sin(chop.rotation.y*2)>0;B.vis=vis;B.T=T;B.sOn=sOn;
+ mC.opacity=.88*vis;mMono.opacity=.94*vis;mLV.opacity=.96*(S.beam&&transparentOptics&&LA==='v'?1:0);mLD.opacity=.96*(S.beam&&transparentOptics&&LA==='d'?1:0);mS1.opacity=.92*vis*(sOn?1:.12);mR.opacity=.92*vis*(sOn?.12:1);mS2.opacity=.92*vis*(sOn?1:.12)*(.08+.92*T);
  const opticReveal=!!(S.xray||S.identifyMode||S.measureVisual||xk>.35);
  const fanIndex=Math.max(0,Math.min(spectrumPalette.length-1,Math.round((Math.max(200,Math.min(700,S.lam))-200)/500*(spectrumPalette.length-1))));
  spectralFan.forEach((f,i)=>{f.mat.opacity=opticReveal&&vis?(i===fanIndex?.78:.045):0});
- beamGlowMeshes.forEach(q=>{q.glow.material.color.copy(q.base.color);q.glow.material.opacity=Math.min(.42,q.base.opacity*.4);q.glow.visible=q.base.opacity>.018});
+ beamGlowMeshes.forEach(q=>{q.glow.material.color.copy(q.base.color);q.glow.material.opacity=transparentOptics?Math.min(.42,q.base.opacity*.4):0;q.glow.visible=transparentOptics&&q.base.opacity>.018});
  // Detektor menerima sinyal yang berdenyut; intensitas ikut berkurang mengikuti absorbansi sampel.
  const pulseBeat=.72+.28*Math.sin(visualMs*.012);detectorSignalMat.color.copy(beamCol);detectorSignalMat.emissive.copy(beamCol).multiplyScalar(vis?(.15+T*.95)*pulseBeat:0);detectorSignalMat.opacity=vis?(.22+.62*T*pulseBeat):.08;detectorSignal.scale.setScalar(.7+.42*pulseBeat*T);
  pmtM.emissive.setRGB(beamCol.r*(.15+T*.8)*vis*pulseBeat,beamCol.g*(.15+T*.8)*vis*pulseBeat,beamCol.b*(.15+T*.8)*vis*pulseBeat);
- halos.forEach(q=>{const lh=q.t==='lv'||q.t==='ld';q.m.color.copy(q.t==='lv'?cV:q.t==='ld'?cD:beamCol);const f=lh?((q.t==='lv'?LA==='v':LA==='d')?(1+.09*Math.sin(visualMs*.045))*Math.min(1.15,.65+.45*S.lampI):0):q.t==='c'?1:q.t==='s1'?(sOn?1:.12):q.t==='s2'?(sOn?1:.12)*(.08+.92*T):q.t==='r'?(sOn?.12:1):.25+.75*T;if(lh&&q.s){const glowScale=q.baseScale*(transparentOptics?1.55:1)*(processRunning?1.18:1);q.s.scale.set(glowScale,glowScale,1);q.s.renderOrder=transparentOptics?30:11}q.m.opacity=Math.min(1,(lh?.99:.9)*(lh?1:vis)*f*(lh?sourceGlowBoost:1))});
+ halos.forEach(q=>{const lh=q.t==='lv'||q.t==='ld';q.m.color.copy(q.t==='lv'?cV:q.t==='ld'?cD:beamCol);const f=lh?((q.t==='lv'?LA==='v':LA==='d')?(1+.09*Math.sin(visualMs*.045))*Math.min(1.15,.65+.45*S.lampI):0):q.t==='c'?1:q.t==='s1'?(sOn?1:.12):q.t==='s2'?(sOn?1:.12)*(.08+.92*T):q.t==='r'?(sOn?.12:1):.25+.75*T;if(lh&&q.s){const glowScale=q.baseScale*(transparentOptics?1.55:1)*(processRunning?1.18:1);q.s.scale.set(glowScale,glowScale,1);q.s.renderOrder=transparentOptics?30:11;q.s.visible=transparentOptics}q.m.opacity=transparentOptics?Math.min(1,(lh?.99:.9)*(lh?1:vis)*f*(lh?sourceGlowBoost:1)):0});
  // Foton bergerak kontinu sepanjang jalur 3D, berubah warna setelah kisi, lalu bergantian pada chopper.
  if(!S.paused)S.opticalClock=(S.opticalClock||0)+dt*(S.job||S.batchMeasuring?2.15:.72);
  const photonSpeed=S.job?5.8:2.5;
