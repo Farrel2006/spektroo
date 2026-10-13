@@ -403,50 +403,94 @@ function tag(m,k){m.traverse(o=>{if(o.isMesh){o.userData.key=k;clickables.push(o
 function canvasTex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t}
 function plane(pw,ph,tx,x,y,z,p,flat){const m=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,y,z);if(flat)m.rotation.x=-Math.PI/2;(p||scene).add(m);return m}
 const txt=(lines,w,h,bg,fg,fs)=>canvasTex(w,h,(g)=>{g.fillStyle=bg;g.fillRect(0,0,w,h);g.fillStyle=fg;g.font='bold '+fs+'px sans-serif';g.textBaseline='middle';lines.forEach((t,i)=>g.fillText(t,10,h*(i+1)/(lines.length+1)))});
-// ---------- Lingkungan laboratorium: lantai ubin, dinding panel, dan lis lantai
-// Tekstur ubin resolusi tinggi dengan nat halus dan variasi permukaan yang lembut.
+// ---------- Lingkungan laboratorium: lantai, meja keramik, dan dinding cutaway
+// Lantai ruang berada di bawah meja; instrumen dan aksesori tetap berada pada permukaan meja y=0.
 const floorTile = canvasTex(512,512,(g,w,h)=>{
  const grad=g.createLinearGradient(0,0,w,h);
- grad.addColorStop(0,'#e9eef1');grad.addColorStop(.48,'#e3e9ed');grad.addColorStop(1,'#dce4e9');
+ grad.addColorStop(0,'#edf1f3');grad.addColorStop(.5,'#e3e9ed');grad.addColorStop(1,'#dce4e8');
  g.fillStyle=grad;g.fillRect(0,0,w,h);
- // Butiran permukaan yang sangat halus agar lantai tidak tampak seperti warna polos.
- for(let i=0;i<2200;i++){
+ for(let i=0;i<2400;i++){
   const x=Math.random()*w,y=Math.random()*h,a=.012+Math.random()*.025;
-  g.fillStyle=`rgba(80,100,115,${a})`;g.fillRect(x,y,1+Math.random()*2,1+Math.random()*2);
+  g.fillStyle=`rgba(75,95,108,${a})`;g.fillRect(x,y,1+Math.random()*2,1+Math.random()*2);
  }
- // Nat ubin dan garis highlight tipis di tepi ubin.
- g.strokeStyle='rgba(105,125,140,.42)';g.lineWidth=5;g.strokeRect(2.5,2.5,w-5,h-5);
- g.strokeStyle='rgba(255,255,255,.68)';g.lineWidth=2;g.strokeRect(8,8,w-16,h-16);
- // Kilau lembut memanjang seperti lantai laboratorium yang terawat.
- const sheen=g.createLinearGradient(0,0,w,h);sheen.addColorStop(0,'rgba(255,255,255,.10)');sheen.addColorStop(.5,'rgba(255,255,255,0)');sheen.addColorStop(1,'rgba(120,145,160,.045)');
- g.fillStyle=sheen;g.fillRect(12,12,w-24,h-24);
+ g.strokeStyle='rgba(120,138,150,.42)';g.lineWidth=4;g.strokeRect(2,2,w-4,h-4);
+ g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=2;g.strokeRect(7,7,w-14,h-14);
 });
 floorTile.wrapS=floorTile.wrapT=THREE.RepeatWrapping;
 floorTile.repeat.set(40,40);floorTile.anisotropy=ren.capabilities.getMaxAnisotropy();
-const floorMat=new THREE.MeshStandardMaterial({map:floorTile,color:0xffffff,roughness:.82,metalness:.015});
+const floorMat=new THREE.MeshStandardMaterial({map:floorTile,color:0xffffff,roughness:.86,metalness:.01});
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),floorMat);
-floor.rotation.x=-Math.PI/2;floor.position.y=-.018;floor.receiveShadow=true;floor.renderOrder=-2;scene.add(floor);
+floor.rotation.x=-Math.PI/2;floor.position.y=-1.035;floor.receiveShadow=true;floor.renderOrder=-2;scene.add(floor);
 
-// Dinding belakang dan dinding samping membentuk ruang laboratorium, bukan latar kosong.
+// Pengelompokan dinding agar dinding belakang dapat disembunyikan saat kamera melihat dari belakang.
+// Ini adalah tampilan cutaway untuk inspeksi 3D, bukan tembok yang menembus alat.
+const rearRoomParts=[];
+const leftRoomParts=[];
+const rightRoomParts=[];
 const wallMat=std(0xe8eef2,{roughness:.94,metalness:0});
-bx(30,8,.2,wallMat,0,3,-4.3);
-bx(.2,8,40,wallMat,-15,3,15);
-bx(.2,8,40,wallMat,15,3,15);
-// Panel sambungan dinding yang tipis dan berwarna netral.
-for(let x=-13.25;x<=13.25;x+=3.25)bx(.022,7.25,.018,0xcbd7df,x,3,-4.185);
+function addRoomPart(list,mesh){list.push(mesh);return mesh}
+// Dinding belakang beserta panel-panelnya.
+addRoomPart(rearRoomParts,bx(30,8,.2,wallMat,0,3,-4.3));
+// Dinding samping tetap ada, tetapi bisa di-cutaway jika kamera bergerak ke luar sisi ruangan.
+addRoomPart(leftRoomParts,bx(.2,8,40,wallMat,-15,3,15));
+addRoomPart(rightRoomParts,bx(.2,8,40,wallMat,15,3,15));
+for(let x=-13.25;x<=13.25;x+=3.25)
+ addRoomPart(rearRoomParts,bx(.022,7.25,.018,0xcbd7df,x,3,-4.185));
 for(let z=-1;z<=31;z+=4){
- bx(.018,7.25,.022,0xcbd7df,-14.84,3,z);
- bx(.018,7.25,.022,0xcbd7df,14.84,3,z);
+ addRoomPart(leftRoomParts,bx(.018,7.25,.022,0xcbd7df,-14.84,3,z));
+ addRoomPart(rightRoomParts,bx(.018,7.25,.022,0xcbd7df,14.84,3,z));
 }
-// Lis bawah melindungi pertemuan lantai dengan dinding dan memberi skala ruang.
-bx(30,.22,.075,0x607f90,0,.105,-4.15);
-bx(.075,.22,40,0x607f90,-14.85,.105,15);
-bx(.075,.22,40,0x607f90,14.85,.105,15);
-// Aksen warna laboratorium yang tenang, menggantikan pilar jingga yang terlalu mencolok.
-[-7,4].forEach(x=>bx(.38,8,.26,0x77a5b2,x,3,-4.12));
-// Kabinet dinding tetap ada sebagai latar fasilitas laboratorium.
-const cab=bx(2.6,3,.5,0x8fa3b5,-3,1.5,-4);
+// Lis bawah berada dekat lantai ruangan pada y=-1.035.
+addRoomPart(rearRoomParts,bx(30,.22,.075,0x607f90,0,-.925,-4.15));
+addRoomPart(leftRoomParts,bx(.075,.22,40,0x607f90,-14.85,-.925,15));
+addRoomPart(rightRoomParts,bx(.075,.22,40,0x607f90,14.85,-.925,15));
+[-7,4].forEach(x=>addRoomPart(rearRoomParts,bx(.38,8,.26,0x77a5b2,x,3,-4.12)));
+const cab=addRoomPart(rearRoomParts,bx(2.6,3,.5,0x8fa3b5,-3,1.5,-4));
 cab.material.transparent=true;cab.material.opacity=.46;
+
+// Meja kerja dengan permukaan keramik terang. Ukuran meja menutupi instrumen, UPS, PC, monitor,
+// serta aksesori yang sudah dimodelkan pada koordinat y=0.
+const tableCeramicTex=canvasTex(256,256,(g,w,h)=>{
+ g.fillStyle='#eeeae0';g.fillRect(0,0,w,h);
+ const grad=g.createLinearGradient(0,0,w,h);grad.addColorStop(0,'rgba(255,255,255,.45)');grad.addColorStop(1,'rgba(155,164,163,.08)');
+ g.fillStyle=grad;g.fillRect(0,0,w,h);
+ // Nat tipis dan tepi tile memberikan kesan keramik, tanpa pola yang terlalu mencolok.
+ g.strokeStyle='rgba(118,130,133,.33)';g.lineWidth=3;g.strokeRect(2,2,w-4,h-4);
+ g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=1;g.strokeRect(7,7,w-14,h-14);
+ for(let i=0;i<260;i++){const x=Math.random()*w,y=Math.random()*h;g.fillStyle=`rgba(110,120,120,${.012+Math.random()*.025})`;g.fillRect(x,y,1.2,1.2)}
+});
+tableCeramicTex.wrapS=tableCeramicTex.wrapT=THREE.RepeatWrapping;
+tableCeramicTex.repeat.set(17,8);tableCeramicTex.anisotropy=ren.capabilities.getMaxAnisotropy();
+const tableBaseMat=std(0xd2d6d5,{roughness:.38,metalness:.05});
+const tableTop=bx(17,.3,8,tableBaseMat,1.5,-.15,.3);
+tableTop.receiveShadow=true;
+// Keramik berada sedikit di atas struktur meja agar natnya jelas terlihat.
+const tableSurface=new THREE.Mesh(new THREE.PlaneGeometry(17,8),new THREE.MeshStandardMaterial({map:tableCeramicTex,color:0xffffff,roughness:.3,metalness:.015}));
+tableSurface.rotation.x=-Math.PI/2;tableSurface.position.set(1.5,.002,.3);tableSurface.receiveShadow=true;tableSurface.renderOrder=1;scene.add(tableSurface);
+// Bingkai tepi meja berwarna metalik satin.
+const tableEdge=std(0x9ea9ad,{roughness:.32,metalness:.55});
+bx(17,.055,.055,tableEdge,1.5,-.125,-3.675);bx(17,.055,.055,tableEdge,1.5,-.125,4.275);
+bx(.055,.055,8,tableEdge,-7,-.125,.3);bx(.055,.055,8,tableEdge,10,-.125,.3);
+// Rangka dan kaki meja menghubungkan meja ke lantai, sehingga instrumen tidak tampak mengambang.
+const tableLegMat=std(0x8c989e,{roughness:.42,metalness:.52});
+[[-6.55,-3.35],[9.55,-3.35],[-6.55,3.95],[9.55,3.95]].forEach(([x,z])=>{
+ bx(.18,1.0,.18,tableLegMat,x,-.5,z);
+ bx(.3,.055,.3,0x717d83,x,-1.005,z);
+});
+// Apron tipis di bawah permukaan meja, dengan finishing netral.
+bx(16.2,.22,.12,0x9ba6aa,1.5,-.36,-3.58);bx(16.2,.22,.12,0x9ba6aa,1.5,-.36,4.18);
+bx(.12,.22,7.45,0x9ba6aa,-6.88,-.36,.3);bx(.12,.22,7.45,0x9ba6aa,9.88,-.36,.3);
+
+// Ketika kamera melewati sisi dinding, lakukan cutaway pada dinding tersebut. Ini menghindari
+// tombol kamera Belakang/Samping membuat tembok menutupi seluruh model instrumen.
+function updateRoomVisibility(){
+ const outsideBack=cam.position.z < -4.45;
+ const outsideLeft=cam.position.x < -15.2;
+ const outsideRight=cam.position.x > 15.2;
+ rearRoomParts.forEach(o=>o.visible=!outsideBack);
+ leftRoomParts.forEach(o=>o.visible=!outsideLeft);
+ rightRoomParts.forEach(o=>o.visible=!outsideRight);
+}
 const cary=new THREE.Group();cary.position.set(-3.2,0,0);scene.add(cary);
 const bumpT=canvasTex(768,768,(g)=>{const d=g.createImageData(768,768);for(let i=0;i<d.data.length;i+=4){const v=124+Math.random()*8;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}g.putImageData(d,0,0)});bumpT.wrapS=bumpT.wrapT=THREE.RepeatWrapping;bumpT.encoding=THREE.LinearEncoding;bumpT.anisotropy=ren.capabilities.getMaxAnisotropy();
 const shW=new THREE.MeshPhysicalMaterial({color:0xf1f1ec,roughness:.29,metalness:.025,clearcoat:.8,clearcoatRoughness:.2,bumpMap:bumpT,bumpScale:.065,transparent:true});
@@ -1090,12 +1134,13 @@ ren.domElement.addEventListener('pointermove',e=>{ren.domElement.style.cursor=pi
 function resize(){const rect=ren.domElement.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height);ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 // ---------- loop
 const B={vis:0,T:1,sOn:true};const clk=new THREE.Clock();let xk=0,uiT=0,chA=0,lastLamp=0;const col=new THREE.Color(),beamCol=new THREE.Color(),tA=new THREE.Color(),tB=new THREE.Color();
-setLiq();syncX();$('animationFocusHud').hidden=true;$('conc').disabled=true;$('opticalStatus').hidden=true;$('cres').hidden=true;$('simpleHistorySection').hidden=true;$('graphHeading').textContent='Spektrum: Panjang gelombang (nm) dan absorbansi';updatePanelToggleUI();updateTestWeightUI(S.solutionKey);updateSolutionGate();syncProcessButtons();drawTable();
+setLiq();syncX();$('animationFocusHud').hidden=true;$('conc').disabled=true;$('opticalStatus').hidden=true;$('cres').hidden=true;$('simpleHistorySection').hidden=true;$('graphHeading').textContent='Spektrum: Panjang gelombang (nm) dan absorbansi';updatePanelToggleUI();updateTestWeightUI(S.solutionKey);updateSolutionGate();syncProcessButtons();drawTable();updateRoomVisibility();
 function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1);const animDt=S.paused?0:dt;if(!S.paused)S.visualTime+=dt;const visualMs=S.visualTime*1000;
  if(S.inst)S.warm=Math.min(WARM,S.warm+animDt);if(S.pc&&!S.booted){S.bootT+=animDt;if(S.bootT>4)S.booted=1}
  runJob(animDt);syncAnimationFocus();
   if(fly){fly.t=Math.min(1,fly.t+dt/.9);const k=fly.t*fly.t*(3-2*fly.t);cam.position.lerpVectors(fly.p0,fly.p1,k);ctl.target.lerpVectors(fly.t0,fly.t1,k);if(fly.t>=1)fly=null}
  ctl.autoRotate=!!S.autoRotateWanted&&!S.paused;ctl.update();
+ updateRoomVisibility();
  // Animasi mekanik mengikuti satu clock. Saat dijeda, posisi semua komponen tetap konstan.
  const lt=S.lid?-1.6:0;lid.rotation.x+=(lt-lid.rotation.x)*Math.min(1,animDt*5);
  cuvK+=((S.cuv?1:0)-cuvK)*Math.min(1,animDt*5);cuvS.position.set(1.6*(1-cuvK),.18+(.8-.18)*cuvK+Math.sin(Math.PI*cuvK)*.5,3+(.95-3)*cuvK);
