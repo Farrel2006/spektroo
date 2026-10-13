@@ -403,12 +403,50 @@ function tag(m,k){m.traverse(o=>{if(o.isMesh){o.userData.key=k;clickables.push(o
 function canvasTex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t}
 function plane(pw,ph,tx,x,y,z,p,flat){const m=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,y,z);if(flat)m.rotation.x=-Math.PI/2;(p||scene).add(m);return m}
 const txt=(lines,w,h,bg,fg,fs)=>canvasTex(w,h,(g)=>{g.fillStyle=bg;g.fillRect(0,0,w,h);g.fillStyle=fg;g.font='bold '+fs+'px sans-serif';g.textBaseline='middle';lines.forEach((t,i)=>g.fillText(t,10,h*(i+1)/(lines.length+1)))});
-// lingkungan
-const tile=canvasTex(256,256,(g)=>{g.fillStyle='#f2f2f0';g.fillRect(0,0,256,256);g.strokeStyle='#b9b9b4';g.lineWidth=5;g.strokeRect(0,0,256,256)});tile.wrapS=tile.wrapT=THREE.RepeatWrapping;tile.repeat.set(17,8);tile.anisotropy=8;
-const tableM=bx(17,.3,8,new THREE.MeshStandardMaterial({map:tile,roughness:.4}),1.5,-.15,.3);
-bx(30,8,.2,0xe8dcc0,0,3,-4.3);[-7,4].forEach(x=>bx(.8,8,.3,0xe8782a,x,3,-4.15));
-const cab=bx(2.6,3,.5,0x8fa3b5,-3,1.5,-4);cab.material.transparent=true;cab.material.opacity=.6;
-// ---------- Cary 100
+// ---------- Lingkungan laboratorium: lantai ubin, dinding panel, dan lis lantai
+// Tekstur ubin resolusi tinggi dengan nat halus dan variasi permukaan yang lembut.
+const floorTile = canvasTex(512,512,(g,w,h)=>{
+ const grad=g.createLinearGradient(0,0,w,h);
+ grad.addColorStop(0,'#e9eef1');grad.addColorStop(.48,'#e3e9ed');grad.addColorStop(1,'#dce4e9');
+ g.fillStyle=grad;g.fillRect(0,0,w,h);
+ // Butiran permukaan yang sangat halus agar lantai tidak tampak seperti warna polos.
+ for(let i=0;i<2200;i++){
+  const x=Math.random()*w,y=Math.random()*h,a=.012+Math.random()*.025;
+  g.fillStyle=`rgba(80,100,115,${a})`;g.fillRect(x,y,1+Math.random()*2,1+Math.random()*2);
+ }
+ // Nat ubin dan garis highlight tipis di tepi ubin.
+ g.strokeStyle='rgba(105,125,140,.42)';g.lineWidth=5;g.strokeRect(2.5,2.5,w-5,h-5);
+ g.strokeStyle='rgba(255,255,255,.68)';g.lineWidth=2;g.strokeRect(8,8,w-16,h-16);
+ // Kilau lembut memanjang seperti lantai laboratorium yang terawat.
+ const sheen=g.createLinearGradient(0,0,w,h);sheen.addColorStop(0,'rgba(255,255,255,.10)');sheen.addColorStop(.5,'rgba(255,255,255,0)');sheen.addColorStop(1,'rgba(120,145,160,.045)');
+ g.fillStyle=sheen;g.fillRect(12,12,w-24,h-24);
+});
+floorTile.wrapS=floorTile.wrapT=THREE.RepeatWrapping;
+floorTile.repeat.set(40,40);floorTile.anisotropy=ren.capabilities.getMaxAnisotropy();
+const floorMat=new THREE.MeshStandardMaterial({map:floorTile,color:0xffffff,roughness:.82,metalness:.015});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),floorMat);
+floor.rotation.x=-Math.PI/2;floor.position.y=-.018;floor.receiveShadow=true;floor.renderOrder=-2;scene.add(floor);
+
+// Dinding belakang dan dinding samping membentuk ruang laboratorium, bukan latar kosong.
+const wallMat=std(0xe8eef2,{roughness:.94,metalness:0});
+bx(30,8,.2,wallMat,0,3,-4.3);
+bx(.2,8,40,wallMat,-15,3,15);
+bx(.2,8,40,wallMat,15,3,15);
+// Panel sambungan dinding yang tipis dan berwarna netral.
+for(let x=-13.25;x<=13.25;x+=3.25)bx(.022,7.25,.018,0xcbd7df,x,3,-4.185);
+for(let z=-1;z<=31;z+=4){
+ bx(.018,7.25,.022,0xcbd7df,-14.84,3,z);
+ bx(.018,7.25,.022,0xcbd7df,14.84,3,z);
+}
+// Lis bawah melindungi pertemuan lantai dengan dinding dan memberi skala ruang.
+bx(30,.22,.075,0x607f90,0,.105,-4.15);
+bx(.075,.22,40,0x607f90,-14.85,.105,15);
+bx(.075,.22,40,0x607f90,14.85,.105,15);
+// Aksen warna laboratorium yang tenang, menggantikan pilar jingga yang terlalu mencolok.
+[-7,4].forEach(x=>bx(.38,8,.26,0x77a5b2,x,3,-4.12));
+// Kabinet dinding tetap ada sebagai latar fasilitas laboratorium.
+const cab=bx(2.6,3,.5,0x8fa3b5,-3,1.5,-4);
+cab.material.transparent=true;cab.material.opacity=.46;
 const cary=new THREE.Group();cary.position.set(-3.2,0,0);scene.add(cary);
 const bumpT=canvasTex(768,768,(g)=>{const d=g.createImageData(768,768);for(let i=0;i<d.data.length;i+=4){const v=124+Math.random()*8;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}g.putImageData(d,0,0)});bumpT.wrapS=bumpT.wrapT=THREE.RepeatWrapping;bumpT.encoding=THREE.LinearEncoding;bumpT.anisotropy=ren.capabilities.getMaxAnisotropy();
 const shW=new THREE.MeshPhysicalMaterial({color:0xf1f1ec,roughness:.29,metalness:.025,clearcoat:.8,clearcoatRoughness:.2,bumpMap:bumpT,bumpScale:.065,transparent:true});
