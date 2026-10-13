@@ -18,59 +18,80 @@ with st.sidebar:
     st.markdown(
         """
 1. Nyalakan berurutan: **UPS** → **instrumen** → **komputer** → **monitor** (klik tombolnya di model 3D).
-2. Tunggu *warm-up* selesai (lihat checklist). Mode transparan aktif otomatis, berkas cahaya terlihat.
-3. Klik layar monitor / **Buka Cary WinUV**.
-4. Buka tutup, pasang kuvet (kuarsa), tutup, lalu **Baseline** (blanko HCl 0,1 M).
-5. Tab **Scan** (200–400 nm) untuk mencari λmax thiamin (≈ 246 nm).
-6. Tab **Concentration**: **Ukur semua standar** → **Hitung kurva** → **Ukur sampel**.
+2. Tunggu *warm-up* selesai (lihat panel *Urutan operasi*). Mode transparan aktif otomatis.
+3. Atur **warna & intensitas lampu** di panel *Lampu sumber* (Otomatis / Manual).
+4. Klik layar monitor atau **Buka Cary WinUV**.
+5. Buka tutup, pasang kuvet kuarsa, tutup, lalu **Baseline** (blanko HCl 0,1 M).
+6. Tab **Scan** (200–400 nm) untuk λmax thiamin (≈ 246 nm).
+7. Tab **Concentration**: **Ukur semua standar** → **Hitung kurva** → **Ukur sampel**.
         """
     )
-    height = st.slider("Tinggi tampilan (px)", 500, 1200, 860, 20)
+    height = st.slider("Tinggi tampilan (px)", 500, 1300, 900, 20)
 
 HTML = r"""<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Digital Twin Cary 100</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font:13px system-ui,sans-serif;background:#1b2330;color:#e8edf3;overflow:hidden}
+:root{--bg:#10161f;--card:#16202eeb;--line:#2b3d55;--tx:#e6edf5;--mut:#8fa3bd;--ac:#35c2b0;--ac2:#4b8df8;--warn:#ff7b6b}
+*{box-sizing:border-box}body{margin:0;font:13px/1.35 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--tx);overflow:hidden}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block}
-.bar{position:fixed;top:6px;left:6px;right:6px;display:flex;flex-wrap:wrap;gap:5px;z-index:5}
 button,select,input{font:inherit}
-button{background:#2b3a50;color:#e8edf3;border:1px solid #4a5d7a;border-radius:6px;padding:5px 9px;cursor:pointer}
-button:hover{background:#3a4f6d}button.on{background:#2d7dd2;border-color:#7fb8f5}button:disabled{opacity:.45;cursor:not-allowed}
-.panel{position:fixed;background:rgba(20,28,40,.9);border:1px solid #3a4d68;border-radius:8px;padding:10px;z-index:4}
-#left{left:6px;top:80px;width:225px;max-height:calc(100% - 200px);overflow:auto}
-#info{right:6px;top:80px;width:240px;max-height:26%;overflow:auto}
-#hud{left:6px;bottom:6px;font-family:monospace;line-height:1.5;white-space:pre}
-#left h4,#info h4{margin:0 0 6px}#left ul{list-style:none;margin:0 0 10px;padding:0}#left li{padding:1px 0;color:#9fb0c6}#left li.ok{color:#7be08f}
-#left li:before{content:"○ "}#left li.ok:before{content:"● "}
-#left label{display:block;margin:6px 0 2px;color:#9fb0c6}#left select,#left input[type=range]{width:100%}
-#toast{position:fixed;top:48px;left:50%;transform:translateX(-50%);background:#b3321f;color:#fff;padding:7px 14px;border-radius:6px;z-index:9;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%}
+button{background:#22324a;color:var(--tx);border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer;transition:background .15s}
+button:hover{background:#2e4466}button.on{background:var(--ac2);border-color:#8db6ff;color:#fff}button.pri{background:var(--ac);border-color:#8de8db;color:#04211d;font-weight:600}button:disabled{opacity:.45;cursor:not-allowed}
+.bar{position:fixed;top:8px;left:8px;right:8px;display:flex;flex-wrap:wrap;gap:8px;z-index:6;pointer-events:none}
+.grp{display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;pointer-events:auto;align-items:center}
+.grp>span{color:var(--mut);font-size:11px;padding:0 6px 0 4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.col{position:fixed;top:92px;bottom:80px;width:250px;display:flex;flex-direction:column;gap:8px;z-index:4;overflow:auto;pointer-events:none}
+.col>.panel{pointer-events:auto;flex:none}#colL{left:8px}#colR{right:8px;width:310px}
+body.hp .col{display:none}
+@media(max-width:820px){.col{width:46vw!important;top:120px}}
+h4{margin:0 0 6px;font-size:12px;color:var(--ac);font-weight:600}
+#prog{height:4px;background:#243349;border-radius:3px;margin-bottom:8px;overflow:hidden}#prog i{display:block;height:100%;width:0;background:var(--ac);transition:width .3s}
+#chk{counter-reset:s;list-style:none;margin:0;padding:0}#chk li{counter-increment:s;display:flex;gap:8px;align-items:center;padding:2px 0;color:var(--mut)}
+#chk li:before{content:counter(s);width:18px;height:18px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:10px;flex:none}
+#chk li.ok{color:var(--tx)}#chk li.ok:before{content:"✓";background:var(--ac);color:#04211d;border-color:var(--ac)}
+.lab{display:block;margin:7px 0 2px;color:var(--mut);font-size:12px}.panel select,.panel input[type=range]{width:100%}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.panel input[type=color]{width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.sw{width:20px;height:20px;border-radius:50%;border:1px solid #fff7;padding:0}
+.cap{font-size:11px;color:var(--mut);line-height:1.4}
+#hud{position:fixed;left:50%;transform:translateX(-50%);bottom:8px;display:flex;gap:6px;align-items:stretch;padding:6px;z-index:5;max-width:98vw;overflow:auto}
+.cell{min-width:72px;background:#0b121b;border:1px solid var(--line);border-radius:8px;padding:3px 8px;text-align:center}.cell small{display:block;color:var(--mut);font-size:10px}
+.cell b{font:600 16px ui-monospace,Consolas,monospace}.cell.hi b{color:var(--ac)}.warn{align-self:center;color:var(--warn);font-size:12px;padding:0 6px;white-space:nowrap}
+.lb{position:fixed;pointer-events:none;font-size:10px;background:#000b;color:#fff;padding:1px 5px;border-radius:3px;z-index:3;white-space:nowrap}
+#toast{position:fixed;top:56px;left:50%;transform:translateX(-50%);background:#b3321f;color:#fff;padding:7px 14px;border-radius:6px;z-index:9;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%}
 #app{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,96vw);max-height:92vh;overflow:auto;background:#ece9d8;color:#111;border:2px solid #0a246a;border-radius:6px;z-index:8;box-shadow:0 10px 40px #000a}
 #app[hidden]{display:none}.wt{background:linear-gradient(#2a62d0,#0a3fa8);color:#fff;padding:5px 8px;display:flex;justify-content:space-between;align-items:center}
-.wt button{padding:0 7px;background:#c33;border-color:#fff}
+.wt button{padding:0 7px;background:#c33;border-color:#fff;color:#fff}
 #app .bd{padding:8px}#app button{background:#f3f3ee;color:#111;border:1px solid #777}#app button:hover{background:#fff}#app button.on{background:#cfe0ff}
 #app input{width:70px}#app table{width:100%;border-collapse:collapse;font-size:12px}#app td,#app th{border:1px solid #aaa;padding:2px 5px;text-align:right}
 #status{margin:6px 0;font-weight:600}canvas#chart{width:100%;background:#fff;border:1px solid #888}
-#sch{right:6px;bottom:6px;width:310px}.lb{position:fixed;pointer-events:none;font-size:10px;background:#000a;color:#fff;padding:1px 4px;border-radius:3px;z-index:3;white-space:nowrap}
 </style></head><body>
 <canvas id="c"></canvas>
 <div class="bar">
- <button data-v="front">Depan</button><button data-v="top">Atas</button><button data-v="back">Belakang</button><button data-v="side">Samping</button>
- <button data-v="inst">Instrumen</button><button data-v="cuv">Kuvet</button><button data-v="mon">Monitor</button>
- <button id="bX">Transparan</button><button id="bB" class="on">Berkas cahaya</button><button id="bL" class="on">Label</button><button id="bR">Auto-rotate</button>
- <button id="bA">Buka Cary WinUV</button><button id="bFS">Layar penuh</button><button id="bRe">Reset simulasi</button>
+ <div class="grp"><span>Kamera</span><button data-v="front">Depan</button><button data-v="top">Atas</button><button data-v="back">Belakang</button><button data-v="side">Samping</button><button data-v="inst">Instrumen</button><button data-v="opt">Optik</button><button data-v="lamp">Lampu</button><button data-v="cuv">Kuvet</button><button data-v="mon">Monitor</button></div>
+ <div class="grp"><span>Tampilan</span><button id="bX">Transparan</button><button id="bB" class="on">Berkas</button><button id="bL" class="on">Label</button><button id="bR">Putar</button></div>
+ <div class="grp"><button id="bA" class="pri">Buka Cary WinUV</button><button id="bP">Panel</button><button id="bFS">Layar penuh</button><button id="bRe">Reset</button></div>
 </div>
-<div class="panel" id="left">
- <h4>Urutan menyalakan</h4>
- <ul id="chk"></ul>
- <h4>Sampel &amp; kuvet</h4>
- <label>Larutan</label><select id="smp"><option value="blank">Blanko (HCl 0,1 M)</option><option value="std">Standar thiamin</option><option value="unk">Sampel thiamin (tak diketahui)</option></select>
- <label>Konsentrasi: <b id="cv">6</b> ppm</label><input type="range" id="conc" min="0.5" max="15" step="0.5" value="6">
- <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap"><button id="bLid">Buka tutup</button><button id="bCuv">Pasang kuvet</button></div>
- <p style="color:#8ea0b8;font-size:11px">Klik langsung pada tombol UPS, saklar rocker instrumen, tombol power PC, monitor, tutup kompartemen, atau kuvet. Spektrum thiamin = data ilustratif (λmax ≈ 246 nm dalam HCl 0,1 M; verifikasi dengan SOP/manual). Daerah UV wajib kuvet kuarsa.</p>
+<div class="col" id="colL">
+ <div class="panel"><h4>Urutan operasi</h4><div id="prog"><i></i></div><ul id="chk"></ul></div>
+ <div class="panel"><h4>Sampel &amp; kuvet</h4>
+  <label class="lab">Larutan</label><select id="smp"><option value="blank">Blanko (HCl 0,1 M)</option><option value="std">Standar thiamin</option><option value="unk">Sampel thiamin (tak diketahui)</option></select>
+  <label class="lab">Konsentrasi: <b id="cv">6</b> ppm</label><input type="range" id="conc" min="0.5" max="15" step="0.5" value="6">
+  <div class="row" style="margin-top:8px"><button id="bLid">Buka tutup</button><button id="bCuv">Pasang kuvet</button></div>
+  <p class="cap" style="margin:8px 0 0">Spektrum thiamin = data ilustratif (λmax ≈ 246 nm dalam HCl 0,1 M; verifikasi dengan SOP). Daerah UV wajib kuvet kuarsa.</p></div>
+ <div class="panel"><h4>Lampu sumber</h4>
+  <label class="lab">Mode warna</label><select id="lmMode"><option value="auto">Otomatis (mengikuti λ)</option><option value="manual">Manual (pilih warna)</option></select>
+  <label class="lab">Warna lampu</label><div class="row"><input type="color" id="lmColor" value="#ffd9a0">
+   <button class="sw" data-lc="#ffd9a0" style="background:#ffd9a0" title="Putih hangat"></button><button class="sw" data-lc="#ffffff" style="background:#fff" title="Putih"></button><button class="sw" data-lc="#8f6bff" style="background:#8f6bff" title="UV violet"></button><button class="sw" data-lc="#3da5ff" style="background:#3da5ff" title="Biru"></button><button class="sw" data-lc="#3dff8a" style="background:#3dff8a" title="Hijau"></button><button class="sw" data-lc="#ff4d4d" style="background:#ff4d4d" title="Merah"></button></div>
+  <label class="lab">Intensitas</label><input type="range" id="lmI" min="0.3" max="2" step="0.1" value="1">
+  <p class="cap" id="lmInfo" style="margin:8px 0 0"></p></div>
 </div>
-<div class="panel" id="info"><h4 id="it">Klik bagian mana saja</h4><div id="ix">Klik objek 3D untuk melihat nama dan fungsinya.</div></div>
+<div class="col" id="colR">
+ <div class="panel" id="info"><h4 id="it">Klik bagian mana saja</h4><div id="ix" class="cap" style="font-size:12px;color:var(--tx)">Klik tombol UPS, saklar instrumen, tombol PC/monitor, tutup kompartemen, kuvet, atau komponen optik untuk melihat fungsinya.</div></div>
+ <div class="panel"><h4>Jalur cahaya (tampak atas)</h4><canvas id="schc" width="290" height="190" style="width:100%;display:block;margin:4px 0"></canvas>
+  <div class="cap">1 Lampu → 2 Cermin M1 → 3 Celah masuk → 4 Kisi (memilih λ) → 5 Cermin M2 → 6 Chopper (membagi berkas) → 7 Kuvet sampel &amp; referensi → 8 Detektor PMT. Di tiap cermin sudut datang = sudut pantul. Berkas sampel meredup setelah kuvet.</div></div>
+</div>
 <div class="panel" id="hud"></div>
-<div class="panel" id="sch"><b>Jalur cahaya (tampak atas)</b><canvas id="schc" width="290" height="190" style="width:100%;display:block;margin:4px 0"></canvas><div style="font-size:11px;color:#9fb0c6;line-height:1.35">1 Lampu → 2 Cermin M1 → 3 Celah masuk → 4 Kisi (memilih λ) → 5 Cermin M2 → 6 Chopper (membagi berkas) → 7 Kuvet sampel &amp; referensi → 8 Detektor PMT. Di tiap cermin sudut datang = sudut pantul. Berkas sampel meredup setelah kuvet.</div></div>
 <div id="toast"></div>
 <div id="app" hidden>
  <div class="wt"><span>Cary WinUV</span><button id="xapp">✕</button></div>
@@ -91,7 +112,7 @@ const $=id=>document.getElementById(id);
 if(typeof THREE==='undefined'){document.body.innerHTML='<p style="padding:20px">Three.js gagal dimuat (cek koneksi internet / WebGL).</p>'}
 else{
 const BY=0.8, WARM=12;
-const S={ups:0,inst:0,pc:0,mon:0,booted:0,bootT:0,warm:0,base:0,lid:0,cuv:0,app:0,xray:0,beam:1,job:null,lam:500,sample:'blank',conc:6,tab:'scan',res:null,lbl:1,autoX:0};
+const S={ups:0,inst:0,pc:0,mon:0,booted:0,bootT:0,warm:0,base:0,lid:0,cuv:0,app:0,xray:0,beam:1,job:null,lam:500,sample:'blank',conc:6,tab:'scan',res:null,lbl:1,autoX:0,camOpt:0,lampMode:'auto',lampColor:'#ffd9a0',lampI:1};
 S.cal={l:246,std:[2,4,6,8,10,12].map(c=>({c,a:null,sd:null})),fit:null,unk:null};
 // ---------- util
 let toastT;function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,2800)}
@@ -128,8 +149,9 @@ bx(30,8,.2,0xe8dcc0,0,3,-4.3);[-7,4].forEach(x=>bx(.8,8,.3,0xe8782a,x,3,-4.15));
 const cab=bx(2.6,3,.5,0x8fa3b5,-3,1.5,-4);cab.material.transparent=true;cab.material.opacity=.6;
 // ---------- Cary 100
 const cary=new THREE.Group();cary.position.set(-3.2,0,0);scene.add(cary);
-const shW=new THREE.MeshPhysicalMaterial({color:0xf1f1ec,roughness:.38,clearcoat:.5,clearcoatRoughness:.3,transparent:true});
-const shD=new THREE.MeshPhysicalMaterial({color:0x34373b,roughness:.5,metalness:.1,clearcoat:.3,transparent:true});
+const bumpT=canvasTex(256,256,(g)=>{const d=g.createImageData(256,256);for(let i=0;i<d.data.length;i+=4){const v=122+Math.random()*12;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}g.putImageData(d,0,0)});bumpT.wrapS=bumpT.wrapT=THREE.RepeatWrapping;bumpT.encoding=THREE.LinearEncoding;
+const shW=new THREE.MeshPhysicalMaterial({color:0xf1f1ec,roughness:.36,clearcoat:.55,clearcoatRoughness:.25,bumpMap:bumpT,bumpScale:.12,transparent:true});
+const shD=new THREE.MeshPhysicalMaterial({color:0x34373b,roughness:.48,metalness:.1,clearcoat:.35,bumpMap:bumpT,bumpScale:.12,transparent:true});
 const shells=[];
 function rrs(w,d,r){const s=new THREE.Shape(),x=-w/2,y=-d/2;s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+d-r);s.quadraticCurveTo(x+w,y+d,x+w-r,y+d);s.lineTo(x+r,y+d);s.quadraticCurveTo(x,y+d,x,y+d-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s}
 function slabG(w,d,h,r,hole){const s=rrs(w,d,r);if(hole){const a=hole,q=new THREE.Path();q.moveTo(a[0]-a[2]/2,-a[1]-a[3]/2);q.lineTo(a[0]+a[2]/2,-a[1]-a[3]/2);q.lineTo(a[0]+a[2]/2,-a[1]+a[3]/2);q.lineTo(a[0]-a[2]/2,-a[1]+a[3]/2);q.closePath();s.holes.push(q)}const b=Math.min(.03,h/3);const g=new THREE.ExtrudeGeometry(s,{depth:h-2*b,bevelEnabled:true,bevelThickness:b,bevelSize:b,bevelOffset:-b,bevelSegments:3,curveSegments:10});g.rotateX(-Math.PI/2);g.translate(0,b,0);return g}
@@ -145,6 +167,7 @@ for(let i=0;i<9;i++)bx(1.3,.012,.025,0x0b0b0b,-1.7,1.385,-1.83+i*.07,cary);
 // tutup kompartemen sampel (engsel di belakang)
 const lid=new THREE.Group();lid.position.set(0,1.1,-.7);cary.add(lid);
 tag(sg(slabG(2.5,2.5,.08,.1),shD,0,0,1.25,lid,true),'lid');tag(bx(.8,.1,.1,0x0d0d0d,0,.1,2.4,lid),'lid');
+for(let i=0;i<10;i++){bx(.02,.3,.06,0x1c1e22,2.805,.25,-1.8+i*.16,cary);bx(.02,.3,.06,0x1c1e22,-2.805,.25,-1.8+i*.16,cary)}bx(5.4,.012,.02,0x1c1e22,0,.5,2.2,cary);[[-2.6,-2],[2.6,-2],[-2.6,2],[2.6,2]].forEach(a=>cy(.13,.05,0x111111,a[0],-.0,a[1],cary));
 // strip depan
 bx(5.4,.22,.05,0x4a4d52,0,.12,2.21,cary);
 const ledM=std(0x114411,{emissive:0x000000});sp(.05,ledM,-2.5,.12,2.25,cary);
@@ -165,23 +188,59 @@ const cuvR=cuvette();cuvR.position.set(0,.8,.05);cary.add(cuvR);tag(cuvR,'cuv_re
 function setLiq(){const m=cuvS.userData.liq.material;m.color.setHex(S.sample==='blank'?0xd7ecff:0xc4e2ff);m.opacity=S.sample==='blank'?.45:.62}
 // optik
 const opt=new THREE.Group();cary.add(opt);
-const silver=std(0xd8dde2,{metalness:.9,roughness:.1});
-const common=[[-2.5,-1.7],[-1.9,-1.7],[-1.9,-1.2],[-1.9,-.6],[-1.1,-1.1],[-1.1,.5]];
+const silver=new THREE.MeshStandardMaterial({color:0xe6eaee,metalness:1,roughness:.05});
+const gold=std(0xc9a227,{metalness:.9,roughness:.3}),steel=std(0x8a9096,{metalness:.7,roughness:.35}),darkM=std(0x2a2d32,{metalness:.4,roughness:.5});
+const glassT=o=>std(0xcfe6ff,{transparent:true,opacity:o,roughness:.05,metalness:0});
+const common=[[-2.2,-1.7],[-1.9,-1.7],[-1.9,-1.2],[-1.9,-.6],[-1.1,-1.1],[-1.1,.5]];
 const sampP=[[-1.1,.5],[-1.1,.95],[-.15,.95],[.15,.95],[1.5,.95],[2.3,.5]];
 const refP=[[-1.1,.5],[-1.1,.05],[1.5,.05],[2.3,.5]];
-const MIRS=[];function mirrors(p){for(let i=1;i<p.length-1;i++){if(i===3&&p===common)continue;const a=p[i-1],b=p[i],c=p[i+1];const d1=[b[0]-a[0],b[1]-a[1]],d2=[c[0]-b[0],c[1]-b[1]];const n1=Math.hypot(...d1),n2=Math.hypot(...d2);if(n1<.3||n2<.01||(i===2&&p===sampP)||(i===2&&p===refP&&false))continue;const nx=d2[0]/n2-d1[0]/n1,nz=d2[1]/n2-d1[1]/n1;if(Math.hypot(nx,nz)<.1)continue;const m=new THREE.Group();m.position.set(b[0],BY,b[1]);m.rotation.y=Math.atan2(nx,nz);MIRS.push([b[0],b[1],m.rotation.y]);bx(.32,.3,.04,silver,0,0,0,m);cy(.035,.12,0xc9a227,0,0,-.08,m,Math.PI/2);opt.add(tag(m,'mirror'))}}
+// sasis & rel
+bx(5.2,.03,4,std(0x7b8087,{metalness:.5,roughness:.5}),0,.505,0,opt);
+[[5.2,.14,.05,0,.58,-2],[5.2,.14,.05,0,.58,2],[.05,.14,4,-2.6,.58,0],[.05,.14,4,2.6,.58,0]].forEach(a=>bx(a[0],a[1],a[2],steel,a[3],a[4],a[5],opt));
+[[4.4,.05,.1,0,.66,-.62],[.1,.05,3,2.05,.66,.4]].forEach(a=>tag(bx(a[0],a[1],a[2],steel,a[3],a[4],a[5],opt),'rail'));
+// cermin (cakram perak, dudukan, 3 sekrup emas)
+const MIRS=[];
+function mirrors(p){for(let i=1;i<p.length-1;i++){if(i===3&&p===common)continue;const a=p[i-1],b=p[i],c=p[i+1];const d1=[b[0]-a[0],b[1]-a[1]],d2=[c[0]-b[0],c[1]-b[1]];const n1=Math.hypot(...d1),n2=Math.hypot(...d2);if(n1<.2||n2<.01)continue;const nx=d2[0]/n2-d1[0]/n1,nz=d2[1]/n2-d1[1]/n1;if(Math.hypot(nx,nz)<.1)continue;
+ const m=new THREE.Group();m.position.set(b[0],BY,b[1]);m.rotation.y=Math.atan2(nx,nz);MIRS.push([b[0],b[1],m.rotation.y]);
+ cy(.17,.035,silver,0,0,0,m,Math.PI/2);bx(.36,.36,.05,darkM,0,0,-.05,m);[[-.11,.11],[.11,.11],[0,-.13]].forEach(s=>cy(.02,.08,gold,s[0],s[1],-.1,m,Math.PI/2));bx(.07,.26,.07,darkM,0,-.2,-.05,m);opt.add(tag(m,'mirror'))}}
 mirrors(common);mirrors(sampP);mirrors(refP);
-const lampV=cy(.14,.4,0xff9a3c,-2.5,BY,-1.7,opt,0,Math.PI/2);const lampVM=lampV.material;lampVM.emissive=new THREE.Color(0);tag(lampV,'lampV');
-const lampD=cy(.12,.35,0x66d9ff,-2.5,BY,-1.3,opt,0,Math.PI/2);lampD.material.emissive=new THREE.Color(0);tag(lampD,'lampD');
-[-1.2].forEach(z=>{const s=new THREE.Group();s.position.set(-1.9,BY,z);bx(.2,.2,.04,0x222222,-.16,0,0,s);bx(.2,.2,.04,0x222222,.16,0,0,s);opt.add(tag(s,'slit'))});
-const grat=new THREE.Group();grat.position.set(-1.9,BY,-.6);bx(.34,.3,.05,0xb08d2a,0,0,0,grat);opt.add(tag(grat,'grat'));
-const chop=new THREE.Group();chop.position.set(-1.1,BY,.5);[0,Math.PI].forEach(a=>{const s=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.03,24,1,false,a,Math.PI/2),std(0x333333,{side:THREE.DoubleSide}));chop.add(s)});opt.add(tag(chop,'chop'));
-const pmtM=std(0x888e96,{emissive:0x000000});const pmt=cy(.22,.6,pmtM,2.45,BY,.5,opt,0,Math.PI/2);tag(pmt,'pmt');
+// lampu Visible (filamen + bola kaca) & lampu UV D2 (tabung + jendela)
+tag(bx(1.0,.5,.8,glassT(.18),-2.35,.78,-1.6,opt),'lampbox');
+const lampVM=std(0x442200,{emissive:0x000000}),bulbVM=std(0xffeedd,{transparent:true,opacity:.3,roughness:.05,emissive:0x000000});
+const lampV=cy(.012,.16,lampVM,-2.6,BY,-1.7,opt,0,Math.PI/2);tag(lampV,'lampV');
+for(let i=-2;i<=2;i++){const c=new THREE.Mesh(new THREE.TorusGeometry(.03,.007,8,16),lampVM);c.position.set(-2.6+i*.03,BY,-1.7);c.rotation.y=Math.PI/2;opt.add(tag(c,'lampV'))}
+tag(sp(.14,bulbVM,-2.6,BY,-1.7,opt),'lampV');tag(cy(.08,.2,gold,-2.8,BY,-1.7,opt,0,Math.PI/2),'lampV');
+const lampD=cy(.1,.34,std(0xcfe6ff,{transparent:true,opacity:.4,roughness:.05,emissive:0x000000}),-2.2,BY,-1.0,opt,Math.PI/2,0);tag(lampD,'lampD');
+tag(cy(.17,.4,steel,-2.2,BY,-.7,opt,Math.PI/2,0),'lampD');
+const d2Win=cy(.07,.02,std(0x99ddff,{emissive:0x000000}),-2.2,BY,-1.19,opt,Math.PI/2,0);tag(d2Win,'lampD');
+const sel=new THREE.Group();sel.position.set(-2.2,BY,-1.7);sel.rotation.y=Math.PI/4;cy(.15,.03,silver,0,0,0,sel,Math.PI/2);bx(.3,.3,.04,darkM,0,0,-.04,sel);opt.add(tag(sel,'selector'));
+const lightV=new THREE.PointLight(0xffd9a0,0,3.4),lightD=new THREE.PointLight(0x88aaff,0,3.4);lightV.position.set(-2.6,BY+.1,-1.7);lightD.position.set(-2.2,BY+.1,-1.2);opt.add(lightV,lightD);
+// premonokromator (visual, sesuai diagram)
+tag(bx(.9,.5,.55,glassT(.16),-.35,.78,-1.6,opt),'premono');tag(cy(.12,.22,gold,-.3,.78,-1.6,opt),'premono');tag(cy(.13,.03,glassT(.5),-.65,BY,-1.6,opt,0,Math.PI/2),'premono');
+// celah variabel (masuk & keluar)
+function slitA(x,z,ry){const s=new THREE.Group();s.position.set(x,BY,z);s.rotation.y=ry;bx(.2,.24,.04,darkM,-.15,0,0,s);bx(.2,.24,.04,darkM,.15,0,0,s);bx(.56,.05,.08,steel,0,.15,0,s);bx(.56,.05,.08,steel,0,-.15,0,s);opt.add(tag(s,'slit'))}
+slitA(-1.9,-1.2,0);slitA(-1.5,-.85,Math.atan2(.8,-.5));
+// kisi difraksi bergaris
+const grat=new THREE.Group();grat.position.set(-1.9,BY,-.6);bx(.38,.3,.06,gold,0,0,0,grat);
+plane(.34,.26,canvasTex(128,128,(g)=>{g.fillStyle='#b8b8c0';g.fillRect(0,0,128,128);g.fillStyle='#55606c';for(let i=0;i<128;i+=3)g.fillRect(i,0,1,128)}),0,0,.032,grat);
+cy(.18,.08,steel,0,-.22,0,grat);opt.add(tag(grat,'grat'));
+// chopper ganda + motor
+const chop=new THREE.Group();chop.position.set(-1.1,BY,.5);
+[[0,0],[.07,Math.PI/2]].forEach(a=>[0,Math.PI].forEach(t=>{const s=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.025,32,1,false,t+a[1],Math.PI/2),std(0x333840,{side:THREE.DoubleSide,metalness:.6,roughness:.4}));s.position.y=a[0];chop.add(s)}));
+cy(.05,.2,gold,0,.02,0,chop);cy(.1,.22,darkM,0,-.2,0,chop);opt.add(tag(chop,'chop'));
+// detektor PMT
+tag(bx(.75,.55,.8,glassT(.2),2.45,.78,.5,opt),'pmt');
+const pmtM=std(0x888e96,{emissive:0x000000,metalness:.6,roughness:.3});const pmt=cy(.22,.6,pmtM,2.45,BY,.5,opt,0,Math.PI/2);tag(pmt,'pmt');
+tag(cy(.2,.02,glassT(.5),2.1,BY,.5,opt,0,Math.PI/2),'pmt');tag(cy(.38,.06,steel,2.82,BY,.5,opt,0,Math.PI/2),'pmt');
+// accessory controller, dinding kompartemen sampel, jendela kuarsa
+tag(cy(.16,.7,darkM,-2.35,.64,1.6,opt,0,Math.PI/2),'accctl');tag(cy(.17,.05,gold,-2.0,.64,1.6,opt,0,Math.PI/2),'accctl');
+[-.38,1.38].forEach(z=>tag(bx(1.76,.45,.03,steel,0,.74,z,opt),'liner'));
+[.95,.05].forEach(z=>[-.86,.86].forEach(x=>tag(bx(.03,.22,.24,glassT(.35),x,BY,z,opt),'window')));
 // berkas
 const mk=()=>new THREE.MeshBasicMaterial({color:0xff0000,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false});
-const mC=mk(),mS1=mk(),mS2=mk(),mR=mk();
+const mC=mk(),mS1=mk(),mS2=mk(),mR=mk(),mLV=mk(),mLD=mk();
 function seg(a,b,m){const A=new THREE.Vector3(a[0],BY,a[1]),B=new THREE.Vector3(b[0],BY,b[1]);const L=A.distanceTo(B);const o=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,L,8),m);o.position.copy(A).add(B).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());o.renderOrder=10;opt.add(o)}
-for(let i=0;i<common.length-1;i++)seg(common[i],common[i+1],mC);
+for(let i=0;i<common.length-1;i++)seg(common[i],common[i+1],mC);seg([-2.6,-1.7],[-2.2,-1.7],mLV);seg([-2.2,-1.2],[-2.2,-1.7],mLD);
 for(let i=0;i<sampP.length-1;i++)seg(sampP[i],sampP[i+1],i<3?mS1:mS2);
 for(let i=0;i<refP.length-1;i++)seg(refP[i],refP[i+1],mR);
 function route(a){const p=common.concat(a.slice(1));const cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));return{p,cum,L:cum[cum.length-1]}}
@@ -189,7 +248,7 @@ const rS=route(sampP),rR=route(refP);const dCuv=rS.cum[common.length-1+3];
 function posAt(r,u){u=u%r.L;let i=1;while(r.cum[i]<u)i++;const t=(u-r.cum[i-1])/(r.cum[i]-r.cum[i-1]);return[r.p[i-1][0]+(r.p[i][0]-r.p[i-1][0])*t,r.p[i-1][1]+(r.p[i][1]-r.p[i-1][1])*t]}
 const pM=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false});const pulses=[];
 const glowT=canvasTex(64,64,(g)=>{const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.3,'rgba(255,255,255,.4)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64)});
-const halos=[];[[-2.5,-1.7,'c',.8],[-1.9,-1.7,'c',.55],[-1.9,-.6,'c',.6],[-1.1,-1.1,'c',.55],[-1.1,.5,'c',.6],[-1.1,.95,'s1',.5],[1.5,.95,'s2',.5],[-1.1,.05,'r',.5],[1.5,.05,'r',.5],[2.3,.5,'p',.9],[0,.95,'s1',.4]].forEach(a=>{const m=new THREE.SpriteMaterial({map:glowT,color:0xff0000,transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false});const s=new THREE.Sprite(m);s.scale.set(a[3],a[3],1);s.position.set(a[0],BY,a[1]);s.renderOrder=11;opt.add(s);halos.push({m,t:a[2]})});
+const halos=[];[[-2.6,-1.7,'lv',1],[-2.2,-1.2,'ld',.9],[-1.9,-1.7,'c',.55],[-1.9,-.6,'c',.6],[-1.1,-1.1,'c',.55],[-1.1,.5,'c',.6],[-1.1,.95,'s1',.5],[1.5,.95,'s2',.5],[-1.1,.05,'r',.5],[1.5,.05,'r',.5],[2.3,.5,'p',.9],[0,.95,'s1',.4]].forEach(a=>{const m=new THREE.SpriteMaterial({map:glowT,color:0xff0000,transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false});const s=new THREE.Sprite(m);s.scale.set(a[3],a[3],1);s.position.set(a[0],BY,a[1]);s.renderOrder=11;opt.add(s);halos.push({m,t:a[2]})});
 [rS,rR].forEach((r,k)=>{for(let i=0;i<10;i++){const s=sp(.07,pM,0,BY,0,opt);s.renderOrder=12;pulses.push({s,r,u:i*r.L/10,k})}});
 // ---------- UPS, PC, monitor, props
 const ups=new THREE.Group();ups.position.set(.9,0,.2);scene.add(ups);
@@ -218,7 +277,7 @@ function cable(pts,c,r){scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THRE
 cable([[-.4,.4,-1.5],[0,.05,-2.4],[1.5,.05,-2.2],[1.2,.1,-.8]],0x1d2fb0);
 cable([[1.5,.3,-.9],[2.3,.03,-2],[3.4,.03,-1.5],[3.8,.05,2.4]],0x111111);cable([[2.8,.4,-1],[3.3,.03,-.6],[3.8,.05,2.2]],0x111111);cable([[4.9,.3,-.7],[4.4,.03,-.3],[3.9,.05,2.3]],0x111111);
 // ---------- info
-const INFO={body:['Cangkang Agilent Cary 100','Pelindung optik tertutup (sealed optics) yang menjaga komponen dari debu dan uap korosif. Aktifkan “Transparan” untuk melihat bagian dalam.'],
+const INFO={premono:['Premonokromator (Cary 300)','Modul penyaring awal yang memperluas rentang linear hingga ±6 Abs pada Cary 300. Cary 100 tidak memilikinya (perlu diverifikasi dengan manual); ditampilkan di sini mengikuti diagram brosur.'],selector:['Cermin pemilih sumber','Terangkat saat lampu Visible dipakai, turun memantulkan cahaya lampu D₂ saat UV. Titik pindah ±350 nm (perlu diverifikasi).'],accctl:['Accessory controller','Pengontrol aksesori terpusat untuk aksesori Agilent dan pihak ketiga (terhubung ke port ACCESSORIES).'],lampbox:['Rumah lampu','Ruang tertutup untuk lampu Visible dan UV agar cahaya terkontrol.'],rail:['Rel optik','Rangka logam tempat komponen optik dipasang tetap sejajar.'],liner:['Dinding kompartemen sampel','Kompartemen besar abu-abu, memberi fleksibilitas ukuran sampel.'],window:['Jendela kuarsa','Jalur berkas masuk/keluar kompartemen sampel.'],body:['Cangkang Agilent Cary 100','Pelindung optik tertutup (sealed optics) yang menjaga komponen dari debu dan uap korosif. Aktifkan “Transparan” untuk melihat bagian dalam.'],
 lampcover:['Panel kompartemen lampu','Menutup ruang lampu Visible (tungsten-halogen) dan UV (deuterium). Jenis lampu: perlu diverifikasi dengan manual alat.'],
 lid:['Tutup kompartemen sampel','Klik untuk membuka/menutup. Harus tertutup saat pengukuran agar cahaya luar tidak masuk. Kompartemen besar memberi fleksibilitas ukuran sampel.'],
 sw:['Saklar power instrumen','Klik untuk ON/OFF. Urutan: UPS → instrumen → komputer → monitor (sesuaikan SOP lab Anda).'],
@@ -258,7 +317,7 @@ function range(){const a=+$('s0').value,b=+$('s1').value;if(!(a>=190&&b<=900&&a<
 function startBase(){const e=pre();if(e){toast(e);return}if(S.sample!=='blank'){setSample('blank');toast('Larutan di kuvet otomatis diganti blanko (HCl 0,1 M).')}const r=range();if(!r)return;S.job={type:'base',l:r[0],stop:r[1],rate:(r[1]-r[0])/1.5}}
 function start(){if(S.tab==='conc'){toast('Gunakan tombol Ukur / Ukur semua standar / Ukur sampel.');return}if(S.tab==='scan'){const e=pre();if(e){toast(e);return}if(!S.base){toast('Lakukan Baseline (blanko) dulu.');return}const r=range();if(!r)return;S.res={type:'scan',pts:[]};S.job={type:'scan',l:r[0],start:r[0],stop:r[1],rate:(r[1]-r[0])/8,last:r[0]-1,pts:S.res.pts};S.xray=1}
  else{const e=pre();if(e){toast(e);return}if(!S.base){toast('Lakukan Baseline (blanko) dulu.');return}const l=+$('sl').value,n=Math.max(1,Math.min(10,+$('sn').value|0));if(!(l>=190&&l<=900)){toast('λ harus 190–900 nm.');return}S.lam=l;S.res={type:'simple',rows:[]};S.job={type:'simple',l,n,i:0,t:0};S.xray=1}
- syncX()}
+ syncX();if(S.job&&!S.camOpt){S.camOpt=1;flyV('opt')}}
 function runJob(dt){const j=S.job;if(!j)return;
  if(j.type==='read'){j.t+=dt;if(j.t>=.8){j.t=0;j.vals.push(readA(j.l));if(j.vals.length>=j.n){S.job=null;j.cb(j.vals)}}}else if(j.type==='scan'||j.type==='base'){j.l=Math.min(j.stop,j.l+j.rate*dt);S.lam=j.l;if(j.type==='scan'&&j.l-j.last>=1){j.last=j.l;j.pts.push([j.l,readA(j.l)])}
   if(j.l>=j.stop){if(j.type==='base'){S.base=1;toast('Baseline selesai.')}else toast('Scan selesai.');S.job=null}}
@@ -274,7 +333,7 @@ function csv(){if(S.tab==='conc'){const C=S.cal,q=C.std.filter(s=>s.a!=null);if(
 const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
 const sdv=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1))};
 function setSample(s,c){S.sample=s;if(c!=null){S.conc=c;$('conc').value=c;$('cv').textContent=c}$('smp').value=s;$('conc').disabled=s!=='std';setLiq()}
-function readOne(sample,c,cb){const e=pre();if(e){toast(e);return false}if(!S.base){toast('Lakukan Baseline (blanko) dulu.');return false}const l=+$('cl').value;if(!(l>=190&&l<=900)){toast('λ harus 190–900 nm.');return false}S.cal.l=l;setSample(sample,c);S.lam=l;S.xray=1;syncX();S.job={type:'read',l,n:3,t:0,vals:[],cb};return true}
+function readOne(sample,c,cb){const e=pre();if(e){toast(e);return false}if(!S.base){toast('Lakukan Baseline (blanko) dulu.');return false}const l=+$('cl').value;if(!(l>=190&&l<=900)){toast('λ harus 190–900 nm.');return false}S.cal.l=l;setSample(sample,c);S.lam=l;S.xray=1;syncX();S.job={type:'read',l,n:3,t:0,vals:[],cb};if(!S.camOpt){S.camOpt=1;flyV('opt')}return true}
 function syncStd(){document.querySelectorAll('#stdtab input').forEach(e=>{const s=S.cal.std[+e.dataset.i];const v=parseFloat(e.value);if(v>=0&&s.c!==v){s.c=v;s.a=null}})}
 function measStd(i,all){syncStd();const s=S.cal.std[i];readOne('std',s.c,v=>{s.a=mean(v);s.sd=sdv(v);S.cal.fit=null;S.cal.unk=null;if(all&&i+1<S.cal.std.length)setTimeout(()=>measStd(i+1,true),300);else calc();renderConc()})}
 function calc(){syncStd();const p=S.cal.std.filter(s=>s.a!=null);if(p.length<3){S.cal.fit=null;toast('Minimal 3 standar terukur.');renderConc();return}
@@ -304,33 +363,37 @@ function drawSch(){const c=$('schc'),g=c.getContext('2d'),w=c.width,h=c.height;g
  const X=x=>16+(x+2.9)/5.5*(w-32),Y=z=>14+(z+2.0)/3.4*(h-28);const rgb='rgb('+(col.r*255|0)+','+(col.g*255|0)+','+(col.b*255|0)+')';const v=B.vis,T=B.T,so=B.sOn;
  g.strokeStyle='#3a4d68';g.setLineDash([4,3]);g.strokeRect(X(-.9),Y(-.4),X(.9)-X(-.9),Y(1.4)-Y(-.4));g.setLineDash([]);g.fillStyle='#6f84a3';g.font='9px sans-serif';g.fillText('kompartemen sampel',X(-.85),Y(1.4)+10);
  const line=(p,i,a)=>{g.globalAlpha=Math.max(0,Math.min(1,a))*v;g.strokeStyle=rgb;g.lineWidth=3;g.beginPath();g.moveTo(X(p[i][0]),Y(p[i][1]));g.lineTo(X(p[i+1][0]),Y(p[i+1][1]));g.stroke()};
- for(let i=0;i<common.length-1;i++)line(common,i,1);for(let i=0;i<sampP.length-1;i++)line(sampP,i,(i<3?1:.1+.9*T)*(so?1:.35));for(let i=0;i<refP.length-1;i++)line(refP,i,so?.35:1);g.globalAlpha=1;
+ const lv0=S.inst&&S.warm>2&&S.lam>=350;line([[-2.6,-1.7],[-2.2,-1.7]],0,lv0?1:0);line([[-2.2,-1.2],[-2.2,-1.7]],0,lv0?0:1);for(let i=0;i<common.length-1;i++)line(common,i,1);for(let i=0;i<sampP.length-1;i++)line(sampP,i,(i<3?1:.1+.9*T)*(so?1:.35));for(let i=0;i<refP.length-1;i++)line(refP,i,so?.35:1);g.globalAlpha=1;
  [[.95,1],[.05,0]].forEach(a=>{g.fillStyle=a[1]&&!S.cuv?'rgba(150,200,255,.12)':'rgba(150,200,255,.55)';g.fillRect(X(-.15),Y(a[0]-.15),X(.15)-X(-.15),Y(a[0]+.15)-Y(a[0]-.15))});
  g.strokeStyle='#e8eef5';g.lineWidth=3;MIRS.forEach(m=>{const dx=Math.cos(m[2])*.2,dz=-Math.sin(m[2])*.2;g.beginPath();g.moveTo(X(m[0]-dx),Y(m[1]-dz));g.lineTo(X(m[0]+dx),Y(m[1]+dz));g.stroke()});
- g.fillStyle='#b08d2a';g.fillRect(X(-1.9)-3,Y(-.6)-8,6,16);g.fillStyle='#777';g.beginPath();g.arc(X(-1.1),Y(.5),9,0,7);g.fill();g.fillStyle='#889';g.beginPath();g.arc(X(2.3),Y(.5),8,0,7);g.fill();g.fillStyle=S.inst&&S.warm>2?'#ff9a3c':'#555';g.beginPath();g.arc(X(-2.5),Y(-1.7),7,0,7);g.fill();
+ g.fillStyle='#b08d2a';g.fillRect(X(-1.9)-3,Y(-.6)-8,6,16);g.fillStyle='#777';g.beginPath();g.arc(X(-1.1),Y(.5),9,0,7);g.fill();g.fillStyle='#889';g.beginPath();g.arc(X(2.3),Y(.5),8,0,7);g.fill();const lv=S.inst&&S.warm>2&&S.lam>=350,ld=S.inst&&S.warm>2&&S.lam<350,mn=S.lampMode==='manual';g.fillStyle=lv?(mn?S.lampColor:'#ffd08a'):'#555';g.beginPath();g.arc(X(-2.6),Y(-1.7),7,0,7);g.fill();g.fillStyle=ld?(mn?S.lampColor:'#88a0ff'):'#555';g.beginPath();g.arc(X(-2.2),Y(-1.2),6,0,7);g.fill();
  if(v){g.fillStyle='#fff';pulses.forEach(p=>{g.beginPath();g.arc(X(p.s.position.x),Y(p.s.position.z),2.4,0,7);g.fill()})}
- g.font='bold 10px sans-serif';[[1,-2.5,-1.7],[2,-1.9,-1.7],[3,-1.9,-1.2],[4,-1.9,-.6],[5,-1.1,-1.1],[6,-1.1,.5],[7,0,.95],[8,2.3,.5]].forEach(a=>{const x=X(a[1])-10,y=Y(a[2])-10;g.fillStyle='#2d7dd2';g.beginPath();g.arc(x,y,7,0,7);g.fill();g.fillStyle='#fff';g.fillText(a[0],x-3,y+3.5)});
+ g.font='bold 10px sans-serif';[[1,-2.6,-1.7],[2,-1.9,-1.7],[3,-1.9,-1.2],[4,-1.9,-.6],[5,-1.1,-1.1],[6,-1.1,.5],[7,0,.95],[8,2.3,.5]].forEach(a=>{const x=X(a[1])-10,y=Y(a[2])-10;g.fillStyle='#2d7dd2';g.beginPath();g.arc(x,y,7,0,7);g.fill();g.fillStyle='#fff';g.fillText(a[0],x-3,y+3.5)});
  g.fillStyle='#e8edf3';g.font='10px sans-serif';g.fillText('I0=100',X(.25),Y(.05)+3);if(S.inst)g.fillText('I='+(100*T).toFixed(1),X(.25),Y(.95)+3)}
 // ---------- label komponen 3D
-const LB=[['Lampu',-2.5,-1.7],['Cermin M1',-1.9,-1.7],['Celah',-1.9,-1.2],['Kisi',-1.9,-.6],['Cermin M2',-1.1,-1.1],['Chopper',-1.1,.5],['Kuvet sampel',0,.95],['Kuvet ref.',0,.05],['PMT',2.3,.5]].map(a=>{const e=document.createElement('div');e.className='lb';e.textContent=a[0];document.body.appendChild(e);return{e,v:new THREE.Vector3(a[1]-3.2,BY+.35,a[2])}});
+const LB=[['Lampu Vis',-2.6,-1.7],['Lampu D₂',-2.2,-1.0],['Cermin M1',-1.9,-1.7],['Celah',-1.9,-1.2],['Kisi',-1.9,-.6],['Cermin M2',-1.1,-1.1],['Chopper',-1.1,.5],['Kuvet sampel',0,.95],['Kuvet ref.',0,.05],['PMT',2.3,.5]].map(a=>{const e=document.createElement('div');e.className='lb';e.textContent=a[0];document.body.appendChild(e);return{e,v:new THREE.Vector3(a[1]-3.2,BY+.35,a[2])}});
 function updLb(){const w=innerWidth,hh=innerHeight;LB.forEach(l=>{const q=l.v.clone().project(cam);const on=S.lbl&&q.z<1;l.e.style.display=on?'block':'none';if(on){l.e.style.left=((q.x+1)/2*w-20)+'px';l.e.style.top=((1-q.y)/2*hh-8)+'px'}})}
 // ---------- UI
 const CHK=[['UPS menyala',()=>S.ups],['Instrumen menyala',()=>S.inst],['Komputer menyala',()=>S.pc],['Monitor menyala',()=>S.mon],['Warm-up selesai',()=>S.inst&&S.warm>=WARM],['Cary WinUV dibuka',()=>S.app],['Baseline blanko',()=>S.base],['Kuvet terpasang',()=>S.cuv],['Tutup tertutup',()=>!S.lid]];
-function renderUI(){document.querySelectorAll('#p-conc button').forEach(b=>b.disabled=!!S.job);$('chk').innerHTML=CHK.map(c=>`<li class="${c[1]()?'ok':''}">${c[0]}${c[0]==='Warm-up selesai'&&S.inst&&S.warm<WARM?' '+Math.round(S.warm/WARM*100)+'%':''}</li>`).join('');
+function renderUI(){document.querySelectorAll('#p-conc button').forEach(b=>b.disabled=!!S.job);$('prog').firstElementChild.style.width=(CHK.filter(c=>c[1]()).length/CHK.length*100)+'%';$('chk').innerHTML=CHK.map(c=>`<li class="${c[1]()?'ok':''}">${c[0]}${c[0]==='Warm-up selesai'&&S.inst&&S.warm<WARM?' '+Math.round(S.warm/WARM*100)+'%':''}</li>`).join('');
  $('bLid').textContent=S.lid?'Tutup tutup':'Buka tutup';$('bCuv').textContent=S.cuv?'Ambil kuvet':'Pasang kuvet';$('bX').classList.toggle('on',!!S.xray);$('bB').classList.toggle('on',!!S.beam);
  const st=!S.inst?'Instrument: Not connected':S.warm<WARM?'Instrument: Warming up '+Math.round(S.warm/WARM*100)+'%':'Instrument: Connected – Ready';$('status').textContent=st+(S.job?' | Mengukur…':'');
  $('aStart').disabled=!!S.job;$('aBase').disabled=!!S.job;$('aStop').disabled=!S.job;
  const T=S.cuv?Math.pow(10,-specA(S.lam)):1,A=-Math.log10(T);
- $('hud').textContent=S.inst?`λ  : ${S.lam.toFixed(1)} nm\nI0 : 100.00 (ref)\nI  : ${(100*T).toFixed(2)} (sampel)\n%T : ${(100*T).toFixed(2)}\nAbs: ${(A+(S.job?noise():0)).toFixed(4)}`+(S.lid?'\n⚠ tutup terbuka':'')+(!S.cuv?'\n⚠ kuvet kosong':''):'Instrumen OFF'}
+ const lon=S.inst&&S.warm>2,lampTxt=lon?(S.lam>=350?'Visible (W)':'UV (D₂)'):'padam';
+ $('lmInfo').textContent=lon?'Aktif: '+(S.lam>=350?'lampu Visible (tungsten-halogen)':'lampu UV (deuterium D₂)')+'. Pergantian ±350 nm (verifikasi dengan manual).':'Lampu padam. Nyalakan instrumen dan tunggu warm-up.';
+ const cell=(l,v,c)=>`<div class="cell ${c||''}"><small>${l}</small><b>${v}</b></div>`;
+ $('hud').innerHTML=S.inst?cell('λ (nm)',S.lam.toFixed(1))+cell('I0 ref','100.0')+cell('I sampel',(100*T).toFixed(1))+cell('%T',(100*T).toFixed(2))+cell('Abs',(A+(S.job?noise():0)).toFixed(4),'hi')+cell('Sumber',lampTxt)+(S.lid?'<div class="warn">⚠ tutup terbuka</div>':'')+(!S.cuv?'<div class="warn">⚠ kuvet kosong</div>':''):cell('Instrumen','OFF');
+}
 function syncX(){shells.forEach(s=>{s.m.raycast=(S.xray&&!s.keep)?()=>{}:THREE.Mesh.prototype.raycast})}
 $('smp').onchange=e=>{S.sample=e.target.value;$('conc').disabled=S.sample==='blank'||S.sample==='unk';setLiq()};$('conc').oninput=e=>{S.conc=+e.target.value;$('cv').textContent=S.conc;setLiq()};
 $('bLid').onclick=toggleLid;$('bCuv').onclick=toggleCuv;$('bX').onclick=()=>{S.xray=S.xray?0:1;syncX()};$('bB').onclick=()=>S.beam=S.beam?0:1;
 $('bR').onclick=e=>{ctl.autoRotate=!ctl.autoRotate;e.target.classList.toggle('on',ctl.autoRotate)};$('bA').onclick=()=>openApp(true);$('xapp').onclick=()=>openApp(false);
 $('bFS').onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>toast('Layar penuh diblokir browser.'))};$('bRe').onclick=()=>location.reload();
-$('aBase').onclick=startBase;$('aStart').onclick=start;$('aStop').onclick=()=>{S.job=null};$('aCsv').onclick=csv;$('cAll').onclick=()=>measStd(0,true);$('cFit').onclick=calc;$('cUnk').onclick=measUnk;$('cClr').onclick=()=>{S.cal.std.forEach(s=>{s.a=null});S.cal.fit=null;S.cal.unk=null;renderConc()};$('bL').onclick=()=>{S.lbl=S.lbl?0:1;$('bL').classList.toggle('on',!!S.lbl)};
+$('aBase').onclick=startBase;$('aStart').onclick=start;$('aStop').onclick=()=>{S.job=null};$('aCsv').onclick=csv;$('cAll').onclick=()=>measStd(0,true);$('cFit').onclick=calc;$('cUnk').onclick=measUnk;$('cClr').onclick=()=>{S.cal.std.forEach(s=>{s.a=null});S.cal.fit=null;S.cal.unk=null;renderConc()};$('bL').onclick=()=>{S.lbl=S.lbl?0:1;$('bL').classList.toggle('on',!!S.lbl)};$('bP').onclick=()=>document.body.classList.toggle('hp');$('lmMode').onchange=e=>{S.lampMode=e.target.value};$('lmColor').oninput=e=>{S.lampColor=e.target.value;S.lampMode='manual';$('lmMode').value='manual'};$('lmI').oninput=e=>{S.lampI=+e.target.value};document.querySelectorAll('[data-lc]').forEach(b=>b.onclick=()=>{S.lampColor=b.dataset.lc;$('lmColor').value=b.dataset.lc;S.lampMode='manual';$('lmMode').value='manual'});
 document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(S.job)return;S.tab=b.dataset.t;document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));$('p-scan').hidden=S.tab!=='scan';$('p-simple').hidden=S.tab!=='simple';$('p-conc').hidden=S.tab!=='conc';if(S.tab==='conc')renderConc();S.res=null;drawTable()});
-const V={front:[[-1,5.5,12],[1,.8,0]],top:[[1,16,.1],[1,0,0]],back:[[1,5,-12],[1,.8,0]],side:[[14,4,3],[0,.8,0]],inst:[[-3.2,4.5,6.5],[-3.2,.7,.5]],cuv:[[-3.2,2.6,3.6],[-3.2,.8,.9]],mon:[[5,2.2,4.5],[5,1.2,-.6]]};
-let fly=null;document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const v=V[b.dataset.v];fly={t:0,p0:cam.position.clone(),t0:ctl.target.clone(),p1:new THREE.Vector3(...v[0]),t1:new THREE.Vector3(...v[1])}});
+const V={front:[[-1,5.5,12],[1,.8,0]],top:[[1,16,.1],[1,0,0]],back:[[1,5,-12],[1,.8,0]],side:[[14,4,3],[0,.8,0]],inst:[[-3.2,4.5,6.5],[-3.2,.7,.5]],cuv:[[-3.2,2.6,3.6],[-3.2,.8,.9]],mon:[[5,2.2,4.5],[5,1.2,-.6]],opt:[[-3.2,7.2,2.6],[-3.2,.8,-.1]],lamp:[[-6.8,2.2,.9],[-5.6,.8,-1.5]]};
+let fly=null;function flyV(k){const v=V[k];fly={t:0,p0:cam.position.clone(),t0:ctl.target.clone(),p1:new THREE.Vector3(...v[0]),t1:new THREE.Vector3(...v[1])}}document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>flyV(b.dataset.v));
 // klik 3D
 const rc=new THREE.Raycaster(),mp=new THREE.Vector2();let dn=null;
 function pick(e){const r=ren.domElement.getBoundingClientRect();mp.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);rc.setFromCamera(mp,cam);const h=rc.intersectObjects(clickables,false);return h.length?h[0].object.userData.key:null}
@@ -340,8 +403,8 @@ ren.domElement.addEventListener('pointerup',e=>{if(!dn||Math.hypot(e.clientX-dn[
 ren.domElement.addEventListener('pointermove',e=>{ren.domElement.style.cursor=pick(e)?'pointer':'default'});
 function resize(){const w=innerWidth,h=innerHeight;ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 // ---------- loop
-const B={vis:0,T:1,sOn:true};const clk=new THREE.Clock();let xk=0,uiT=0,chA=0,lastLamp=0;const col=new THREE.Color();
-setLiq();syncX();$('conc').disabled=true;
+const B={vis:0,T:1,sOn:true};const clk=new THREE.Clock();let xk=0,uiT=0,chA=0,lastLamp=0;const col=new THREE.Color(),tA=new THREE.Color(),tB=new THREE.Color();
+setLiq();syncX();$('conc').disabled=true;if(innerWidth<820)document.body.classList.add('hp');
 function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1);
  if(S.inst)S.warm=Math.min(WARM,S.warm+dt);if(S.pc&&!S.booted){S.bootT+=dt;if(S.bootT>4)S.booted=1}
  runJob(dt);
@@ -355,12 +418,16 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1)
  pcLed.material.emissive.setHex(S.pc?0x00ff00:0);monLed.material.emissive.setHex(S.mon?0x00ff00:0);
  xk+=((S.xray?1:0)-xk)*Math.min(1,dt*4);shW.opacity=shD.opacity=1-.88*xk;shW.depthWrite=shD.depthWrite=xk<.05;shells.forEach(s=>{s.e.visible=xk>.02;s.e.material.opacity=xk*.9});
  // lampu & berkas
- const lampOn=S.inst&&S.warm>2;if(lampOn&&!S.autoX){S.autoX=1;S.xray=1;syncX();toast("Mode transparan aktif otomatis agar berkas terlihat (tombol Transparan untuk mematikan).")}lampVM.emissive.setHex(lampOn&&S.lam>=350?0xff7a00:0);lampD.material.emissive.setHex(lampOn&&S.lam<350?0x2299cc:0);
+ const lampOn=S.inst&&S.warm>2;if(lampOn&&!S.autoX){S.autoX=1;S.xray=1;syncX();toast("Mode transparan aktif otomatis agar berkas terlihat (tombol Transparan untuk mematikan).")}const LA=lampOn?(S.lam>=350?'v':'d'):null,mn=S.lampMode==='manual',cV=mn?tA.set(S.lampColor):tA.setRGB(1,.8,.5),cD=mn?tB.set(S.lampColor):tB.setRGB(.5,.6,1),fl=1+.04*Math.sin(performance.now()*.05);
+ lampVM.emissive.copy(cV).multiplyScalar(LA==='v'?3*S.lampI*fl:0);bulbVM.emissive.copy(cV).multiplyScalar(LA==='v'?.5*S.lampI:0);
+ lampD.material.emissive.copy(cD).multiplyScalar(LA==='d'?1.5*S.lampI*fl:0);d2Win.material.emissive.copy(cD).multiplyScalar(LA==='d'?3*S.lampI:0);
+ lightV.color.copy(cV);lightV.intensity=LA==='v'?(.6+1.6*xk)*S.lampI:0;lightD.color.copy(cD);lightD.intensity=LA==='d'?(.6+1.6*xk)*S.lampI:0;
+ sel.position.y+=((LA==='d'?BY:BY+.38)-sel.position.y)*Math.min(1,dt*6);
  chop.rotation.y+=(S.inst?(S.job?6:3):0)*dt;grat.rotation.y=(S.lam-190)/710*.8;
- W(S.lam);col.setRGB(...W(S.lam));[mC,mS1,mS2,mR,pM].forEach(m=>m.color.copy(col));
+ if(S.lampMode==='manual')col.set(S.lampColor);else col.setRGB(...W(S.lam));[mC,mS1,mS2,mR,pM,mLV,mLD].forEach(m=>m.color.copy(col));
  const T=S.cuv&&!S.lid?Math.pow(10,-specA(S.lam)):1;const vis=S.beam&&lampOn?1:0;const sOn=Math.sin(chop.rotation.y*2)>0;B.vis=vis;B.T=T;B.sOn=sOn;
- mC.opacity=.9*vis;mS1.opacity=.9*vis*(sOn?1:.3);mR.opacity=.9*vis*(sOn?.3:1);mS2.opacity=.9*vis*(sOn?1:.3)*(.1+.9*T);
- pmtM.emissive.setRGB(col.r*.5*T*vis,col.g*.5*T*vis,col.b*.5*T*vis);halos.forEach(q=>{q.m.color.copy(col);const f=q.t==="c"?1:q.t==="s1"?(sOn?1:.3):q.t==="s2"?(sOn?1:.3)*(.1+.9*T):q.t==="r"?(sOn?.3:1):.3+.7*T;q.m.opacity=.8*vis*f});
+ mC.opacity=.9*vis;mLV.opacity=.9*(S.beam&&LA==='v'?1:0);mLD.opacity=.9*(S.beam&&LA==='d'?1:0);mS1.opacity=.9*vis*(sOn?1:.3);mR.opacity=.9*vis*(sOn?.3:1);mS2.opacity=.9*vis*(sOn?1:.3)*(.1+.9*T);
+ pmtM.emissive.setRGB(col.r*.5*T*vis,col.g*.5*T*vis,col.b*.5*T*vis);halos.forEach(q=>{const lh=q.t==='lv'||q.t==='ld';q.m.color.copy(q.t==='lv'?cV:q.t==='ld'?cD:col);const f=lh?((q.t==='lv'?LA==='v':LA==='d')?(1+.06*Math.sin(performance.now()*.05))*S.lampI:0):q.t==='c'?1:q.t==='s1'?(sOn?1:.3):q.t==='s2'?(sOn?1:.3)*(.1+.9*T):q.t==='r'?(sOn?.3:1):.3+.7*T;q.m.opacity=Math.min(1,.8*(lh?1:vis)*f)});
  const v=S.job?3.2:1.4;pulses.forEach(p=>{p.s.visible=!!vis;if(!vis)return;p.u+=v*dt;const q=posAt(p.r,p.u);p.s.position.set(q[0],BY,q[1]);const u=p.u%p.r.L;const sc=(p.k===0&&u>dCuv)?.2+.8*T:1;p.s.scale.setScalar(sc)});
  // UI
  drawScreen();updLb();drawSch();uiT+=dt;if(uiT>.15){uiT=0;renderUI();if(S.app){drawChart();if(S.res&&S.res.type==='simple')drawTable()}}
