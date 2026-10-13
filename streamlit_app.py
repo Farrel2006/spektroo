@@ -617,7 +617,7 @@ function syncProcessButtons(){const b=$('bPause');if(b){const running=!!(S.job||
 function enterAnimationFocus(){
  if(S.focusRestore)return;
  S.focusRestore={
-  app:S.app,appMinimized:S.appMinimized,appHidden:$('app').hidden,
+  app:S.app,appMinimized:S.appMinimized,appHidden:$('app').hidden,appDisplay:$('app').style.display,
   panelClasses:['hp','left-hidden','right-hidden'].filter(c=>document.body.classList.contains(c)),
   xray:S.xray,lbl:S.lbl,identifyMode:S.identifyMode,measureVisual:S.measureVisual,
   menuHidden:$('menuDrop').hidden,howtoHidden:$('howtoBackdrop').hidden
@@ -626,7 +626,7 @@ function enterAnimationFocus(){
  document.body.classList.add('focus-animation');
  $('animationFocusHud').hidden=false;
  // Cary WinUV disembunyikan dari layar dan dari modal, namun statusnya disimpan untuk dipulihkan.
- S.appMinimized=1;$('app').hidden=true;$('menuDrop').hidden=true;$('howtoBackdrop').hidden=true;
+ S.appMinimized=1;$('app').hidden=true;$('app').style.display='none';$('menuDrop').hidden=true;$('howtoBackdrop').hidden=true;
  $('bL').classList.remove('on');$('bX').classList.remove('on');
  syncX();syncAnimationFocusHUD();drawScreen();
  if(typeof resize==='function')requestAnimationFrame(()=>resize());
@@ -636,7 +636,7 @@ function exitAnimationFocus(){
  document.body.classList.remove('focus-animation','hp','left-hidden','right-hidden');
  (r.panelClasses||[]).forEach(c=>document.body.classList.add(c));
  S.app=r.app;S.appMinimized=r.appMinimized;S.xray=r.xray;S.lbl=r.lbl;S.identifyMode=r.identifyMode;S.measureVisual=r.measureVisual;
- $('app').hidden=r.appHidden;$('menuDrop').hidden=r.menuHidden;$('howtoBackdrop').hidden=r.howtoHidden;
+ $('app').hidden=r.appHidden;$('app').style.display=r.appDisplay||'';$('menuDrop').hidden=r.menuHidden;$('howtoBackdrop').hidden=r.howtoHidden;
  $('animationFocusHud').hidden=true;S.focusRestore=null;
  $('bL').classList.toggle('on',!!S.lbl);$('bX').classList.toggle('on',!!(S.xray||S.identifyMode||S.measureVisual));
  syncX();syncProcessButtons();updatePanelToggleUI();drawScreen();
@@ -660,6 +660,8 @@ function syncAnimationFocusHUD(){
 }
 function syncAnimationFocus(){
  const running=!!(S.job||S.batchMeasuring);
+ // Safety net: every active measurement must hide Cary WinUV, even if a measurement path bypasses startJob.
+ if(running&&!S.focusRestore)enterAnimationFocus();
  if(S.focusRestore&&!running)exitAnimationFocus();
  else if(S.focusRestore)syncAnimationFocusHUD();
 }
