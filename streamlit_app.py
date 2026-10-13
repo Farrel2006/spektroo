@@ -74,6 +74,24 @@ h4{margin:0 0 6px;font-size:12px;color:var(--ac);font-weight:600}
 #app .bx{border:1px solid #aaa;background:#f6f4e8;padding:6px;margin-top:6px;line-height:2}
 #status{margin:6px 0;font-weight:600}canvas#chart{width:100%;background:#fff;border:1px solid #888}
 #scanRes{margin:4px 0;font-size:12px}
+/* Tombol lipat panel kiri/kanan. Tetap terlihat meskipun panel disembunyikan. */
+.panel-toggle{position:fixed;top:50%;transform:translateY(-50%);z-index:7;width:28px;height:58px;padding:0;display:flex;align-items:center;justify-content:center;background:#16202ef2;color:var(--ac);font-size:25px;font-weight:700;border:1px solid #47617e;box-shadow:0 2px 12px #0007;pointer-events:auto}
+#toggleLeft{left:258px;border-radius:0 9px 9px 0}
+#toggleRight{right:312px;border-radius:9px 0 0 9px}
+body.left-hidden #colL{display:none}
+body.right-hidden #colR{display:none}
+body.left-hidden #toggleLeft,body.hp #toggleLeft{left:8px;border-radius:0 9px 9px 0}
+body.right-hidden #toggleRight,body.hp #toggleRight{right:8px;border-radius:9px 0 0 9px}
+/* Saat panel kanan tertutup, bidang 3D memakai seluruh lebar tampilan. */
+body.right-hidden #c,body.hp #c{inset:0;width:100%;height:100%}
+body.right-hidden .bar,body.hp .bar{right:8px}
+body.right-hidden #hud,body.hp #hud{left:0;transform:none;width:100%;max-width:100%}
+@media(max-width:820px){
+ #toggleLeft{left:calc(8px + 46vw)}
+ #toggleRight{right:calc(8px + 46vw)}
+ body.left-hidden #toggleLeft,body.hp #toggleLeft{left:8px}
+ body.right-hidden #toggleRight,body.hp #toggleRight{right:8px}
+}
 </style></head><body>
 <canvas id="c"></canvas>
 <div class="bar">
@@ -81,6 +99,9 @@ h4{margin:0 0 6px;font-size:12px;color:var(--ac);font-weight:600}
  <div class="grp"><span>Tampilan</span><button id="bX">Transparan</button><button id="bB" class="on">Berkas</button><button id="bL" class="on">Label</button><button id="bR">Putar</button></div>
  <div class="grp"><button id="bA" class="pri">Buka Cary WinUV</button><button id="bP">Panel</button><button id="bFS">Layar penuh</button><button id="bRe">Reset</button></div>
 </div>
+<!-- Tombol panah untuk menyembunyikan dan memunculkan panel samping -->
+<button id="toggleLeft" class="panel-toggle" type="button" aria-label="Sembunyikan panel kiri" title="Sembunyikan panel kiri">‹</button>
+<button id="toggleRight" class="panel-toggle" type="button" aria-label="Sembunyikan panel kanan" title="Sembunyikan panel kanan">›</button>
 <div class="col" id="colL">
  <div class="panel"><h4>Urutan operasi</h4><div id="prog"><i></i></div><ul id="chk"></ul></div>
  <div class="panel"><h4>Sampel &amp; kuvet</h4>
@@ -458,7 +479,47 @@ $('cAddStd').onclick=()=>{const C=S.cal,last=C.std.length?C.std[C.std.length-1].
 const useL=()=>{if(S.lmax){const v=Math.round(S.lmax.l*10)/10;$('cl').value=v;$('sl').value=v;S.cal.l=v;toast('λ analisis = '+v+' nm (dari λmax scan).');drawCal()}else toast('Lakukan Scan dulu untuk mendapatkan λmax.')};
 $('bUseL').onclick=useL;$('cUseL').onclick=useL;$('cl').onchange=()=>{S.cal.l=+$('cl').value;drawCal()};
 ['massa','vol','df','tabw','aU','aSp','cAdd'].forEach(id=>$(id).oninput=()=>{S.spkC=+$('cAdd').value||0;renderRes()});
-$('bL').onclick=()=>{S.lbl=S.lbl?0:1;$('bL').classList.toggle('on',!!S.lbl)};$('bP').onclick=()=>document.body.classList.toggle('hp');$('lmMode').onchange=e=>{S.lampMode=e.target.value};$('lmColor').oninput=e=>{S.lampColor=e.target.value;S.lampMode='manual';$('lmMode').value='manual'};$('lmI').oninput=e=>{S.lampI=+e.target.value};document.querySelectorAll('[data-lc]').forEach(b=>b.onclick=()=>{S.lampColor=b.dataset.lc;$('lmColor').value=b.dataset.lc;S.lampMode='manual';$('lmMode').value='manual'});
+$('bL').onclick=()=>{S.lbl=S.lbl?0:1;$('bL').classList.toggle('on',!!S.lbl)};
+function updatePanelToggleUI(){
+ const allHidden=document.body.classList.contains('hp');
+ const leftHidden=allHidden||document.body.classList.contains('left-hidden');
+ const rightHidden=allHidden||document.body.classList.contains('right-hidden');
+ const bl=$('toggleLeft'),br=$('toggleRight');
+ bl.textContent=leftHidden?'›':'‹';
+ bl.title=leftHidden?'Tampilkan panel kiri':'Sembunyikan panel kiri';
+ bl.setAttribute('aria-label',bl.title);
+ br.textContent=rightHidden?'‹':'›';
+ br.title=rightHidden?'Tampilkan panel kanan':'Sembunyikan panel kanan';
+ br.setAttribute('aria-label',br.title);
+ $('bP').title=allHidden?'Tampilkan semua panel':'Sembunyikan semua panel';
+}
+$('toggleLeft').onclick=()=>{
+ if(document.body.classList.contains('hp')){
+  document.body.classList.remove('hp','left-hidden');
+  document.body.classList.add('right-hidden');
+ }else{
+  document.body.classList.toggle('left-hidden');
+ }
+ updatePanelToggleUI();
+};
+$('toggleRight').onclick=()=>{
+ if(document.body.classList.contains('hp')){
+  document.body.classList.remove('hp','right-hidden');
+  document.body.classList.add('left-hidden');
+ }else{
+  document.body.classList.toggle('right-hidden');
+ }
+ updatePanelToggleUI();
+};
+$('bP').onclick=()=>{
+ if(document.body.classList.contains('hp')){
+  document.body.classList.remove('hp','left-hidden','right-hidden');
+ }else{
+  document.body.classList.add('hp');
+ }
+ updatePanelToggleUI();
+};
+$('lmMode').onchange=e=>{S.lampMode=e.target.value};$('lmColor').oninput=e=>{S.lampColor=e.target.value;S.lampMode='manual';$('lmMode').value='manual'};$('lmI').oninput=e=>{S.lampI=+e.target.value};document.querySelectorAll('[data-lc]').forEach(b=>b.onclick=()=>{S.lampColor=b.dataset.lc;$('lmColor').value=b.dataset.lc;S.lampMode='manual';$('lmMode').value='manual'});
 document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{if(S.job)return;S.tab=b.dataset.t;document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));$('p-scan').hidden=S.tab!=='scan';$('p-simple').hidden=S.tab!=='simple';$('p-conc').hidden=S.tab!=='conc';$('scanBox').hidden=S.tab!=='scan';$('cres').hidden=S.tab!=='conc';if(S.tab==='conc')renderConc();S.res=null;drawTable()});
 const V={front:[[-1,5.5,12],[1,.8,0]],top:[[1,16,.1],[1,0,0]],back:[[1,5,-12],[1,.8,0]],side:[[14,4,3],[0,.8,0]],inst:[[-3.2,4.5,6.5],[-3.2,.7,.5]],cuv:[[-3.2,2.6,3.6],[-3.2,.8,.9]],mon:[[5,2.2,4.5],[5,1.2,-.6]],opt:[[-3.2,7.2,2.6],[-3.2,.8,-.1]],lamp:[[-6.8,2.2,.9],[-5.6,.8,-1.5]]};
 let fly=null;function flyV(k){const v=V[k];fly={t:0,p0:cam.position.clone(),t0:ctl.target.clone(),p1:new THREE.Vector3(...v[0]),t1:new THREE.Vector3(...v[1])}}document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>flyV(b.dataset.v));
@@ -472,7 +533,7 @@ ren.domElement.addEventListener('pointermove',e=>{ren.domElement.style.cursor=pi
 function resize(){const rect=ren.domElement.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height);ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
 // ---------- loop
 const B={vis:0,T:1,sOn:true};const clk=new THREE.Clock();let xk=0,uiT=0,chA=0,lastLamp=0;const col=new THREE.Color(),tA=new THREE.Color(),tB=new THREE.Color();
-setLiq();syncX();$('conc').disabled=true;$('cres').hidden=true;if(innerWidth<820)document.body.classList.add('hp');
+setLiq();syncX();$('conc').disabled=true;$('cres').hidden=true;if(innerWidth<820)document.body.classList.add('hp');updatePanelToggleUI();
 function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1);
  if(S.inst)S.warm=Math.min(WARM,S.warm+dt);if(S.pc&&!S.booted){S.bootT+=dt;if(S.bootT>4)S.booted=1}
  runJob(dt);
