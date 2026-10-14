@@ -311,7 +311,9 @@ body.focus-animation{background:#10161f}
     <div id="p-conc" hidden style="margin:6px 0">
      <div class="calc-guide"><b>Urutan kerja:</b> (1) ukur deret standar dan hitung kurva, (2) ukur sampel lalu hitung kadar, (3) evaluasi presisi/akurasi memakai bobot, bukan memasukkan bobot sebagai ppm.</div>
      <section class="calc-section">
-      <div class="calc-section-title"><span class="calc-section-number">1</span><div><h4>Kurva Kalibrasi Standar</h4><p>Gunakan standar 0, 5, 10, 15, 20, dan 25 ppm. Absorban bisa diperoleh lewat pengukuran atau diisi manual pada tabel.</p></div></div>
+      <div class="calc-section-title"><span class="calc-section-number">1</span><div><h4>Kurva Kalibrasi Standar</h4><p>Deret standar 0, 5, 10, 15, 20, dan 25 ppm. Nilai absorbansi awal diisi memakai data praktikum yang kamu kirim, tetapi setiap sel tetap bisa diedit manual.</p></div></div>
+      <label class="calc-field">Sumber data saat tombol Ukur ditekan<select id="stdDataMode"><option value="praktikum" selected>Data praktikum (dari tabel Excel)</option><option value="simulasi">Simulasi pembacaan alat</option></select></label>
+      <p id="stdDataModeHint" class="calc-help">Mode data praktikum aktif: tombol Ukur akan memakai nilai absorbansi di tabel (termasuk hasil edit manual). Animasi alat tetap berjalan. Pilih Simulasi pembacaan alat untuk mengganti nilai dengan hasil simulasi.</p>
       <label class="calc-field">Panjang gelombang analisis (nm)<input id="cl" type="number" value="246" min="190" max="900" step="0.1"></label>
       <div style="margin:5px 0"><button id="cUseL">Pakai λmax hasil Scan</button> <small>(acuan awal sekitar 246 nm)</small></div>
       <div id="stdtab"></div>
@@ -368,7 +370,21 @@ const BY=0.8, WARM=12;
 const AUTO_V='#ffb000', AUTO_D='#8a4dff';
 const S={ups:0,inst:0,pc:0,mon:0,booted:0,bootT:0,warm:0,base:0,lid:0,cuv:0,app:0,xray:0,beam:1,job:null,lam:500,sample:'blank',solutionKey:'aquades',conc:5,spkC:2,tab:'scan',res:null,lbl:0,autoX:0,camOpt:0,lampMode:'auto',lampColor:AUTO_V,lampI:1,lmax:null,out:{},identifyMode:0,measureVisual:0,paused:0,batchMeasuring:0,resumeAppAfterIdentify:0,appMinimized:0,opticalClock:0,visualTime:0,simpleHistory:[],lastSampleRead:null,isAutoFillingAbs:false,autoAbsKey:null,focusRestore:null,testVolumeMl:50,testDilutionFactor:4,precisionWeights:{pres_1:0.0050,pres_2:0.0050,pres_3:0.0050,pres_4:0.0050,pres_5:0.0050},accuracyWeights:{akurasi_1:0.0050,akurasi_2:0.0050,akurasi_3:0.0050,akurasi_4:0.0050,akurasi_5:0.0050}};
 const DATA_LMAX_NM=246.0; // Nilai acuan dari model/data yang sudah dipakai. Ubah sesuai hasil praktikum aktual.
-S.cal={l:246,std:[0,5,10,15,20,25].map(c=>({c,a:null,sd:null})),fit:null,unk:null,spk:null};
+// Data praktikum yang terlihat pada tabel Excel yang dikirim pengguna.
+// Nilai ini menjadi sumber default untuk pengukuran standar; setiap sel tetap bisa diedit manual.
+const PRACTICUM_STANDARD_DATA=[
+ {c:0,a:0.002},
+ {c:5,a:0.212},
+ {c:10,a:0.402},
+ {c:15,a:0.620},
+ {c:20,a:0.811},
+ {c:25,a:1.035}
+];
+function practicumAbsorbanceForConcentration(c){
+ const item=PRACTICUM_STANDARD_DATA.find(q=>Math.abs(Number(q.c)-Number(c))<1e-9);
+ return item?item.a:null;
+}
+S.cal={l:246,std:PRACTICUM_STANDARD_DATA.map(q=>({c:q.c,a:q.a,sd:null,source:'praktikum'})),fit:null,unk:null,spk:null};
 // ---------- util
 let toastT;function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,2800)}
 function W(l){let r=0,g=0,b=0;if(l<380)return[.55,.25,1];if(l<440){r=(440-l)/60;b=1}else if(l<490){g=(l-440)/50;b=1}else if(l<510){g=1;b=(510-l)/20}else if(l<580){r=(l-510)/70;g=1}else if(l<645){r=1;g=(645-l)/65}else if(l<=780)r=1;else return[.5,.1,.1];return[r,g,b]}
@@ -891,7 +907,7 @@ function drawChart(){
  }
 }
 function drawTable(){const rows=S.simpleHistory||[];if(!rows.length){$('tbl').innerHTML='<p class="cap" style="color:#444">Belum ada hasil. Pilih larutan kerja lalu jalankan Simple Reads; setiap pembacaan akan ditambahkan di sini.</p>';return}let t='<table><tr><th>#</th><th>Larutan kerja</th><th>Konsentrasi (ppm)</th><th>Replikat</th><th>λ (nm)</th><th>Abs</th><th>%T</th><th>Bobot (g)</th></tr>';rows.forEach(x=>{const conc=x.concentration==null?'—':x.concentration;const weight=x.weight==null?'—':Number(x.weight).toFixed(4);t+=`<tr><td>${x.no}</td><td style="text-align:left">${x.solution}</td><td>${conc}</td><td>${x.replicate}</td><td>${x.lambda.toFixed(1)}</td><td>${x.abs.toFixed(4)}</td><td>${x.transmittance.toFixed(2)}</td><td>${weight}</td></tr>`});$('tbl').innerHTML=t+'</table>'}
-function csv(){if(S.tab==='simple'){const rows=S.simpleHistory||[];if(!rows.length){toast('Belum ada hasil Simple Reads untuk diekspor.');return}const q=v=>String(v==null?'':v).replaceAll('\"','\"\"');let t='No,Larutan kerja,Konsentrasi (ppm),Replikat,λ (nm),Abs,%T,Bobot (g)\n'+rows.map(x=>[x.no,q(x.solution),x.concentration??'',x.replicate,x.lambda.toFixed(1),x.abs.toFixed(4),x.transmittance.toFixed(2),x.weight??''].join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='cary100_simple_reads_history.csv';a.click();return}if(S.tab==='conc'){const C=S.cal,q=C.std.filter(s=>s.a!=null);if(!q.length){toast('Belum ada data.');return}let t='ppm,Abs\n'+q.map(s=>s.c+','+s.a.toFixed(4)).join('\n');if(C.fit)t+='\n\nslope,'+C.fit.a+'\nintercept,'+C.fit.b+'\nr,'+C.fit.r;const o=S.out;if(o.c!=null)t+='\n\nC terukur (ppm),'+o.c+'\nC asli (ppm),'+o.cA;if(o.mgg!=null)t+='\nKadar (mg/g),'+o.mgg;if(o.rec!=null)t+='\n% Recovery,'+o.rec;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='kalibrasi_thiamin.csv';a.click();return}const r=S.res;if(!r){toast('Belum ada data.');return}let t=r.type==='scan'?'nm,Abs\n'+r.pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(4)).join('\n'):'n,nm,Abs,%T\n'+r.rows.map(x=>x.map(v=>+v.toFixed(4)).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='cary100_'+r.type+'.csv';a.click()}
+function csv(){if(S.tab==='simple'){const rows=S.simpleHistory||[];if(!rows.length){toast('Belum ada hasil Simple Reads untuk diekspor.');return}const q=v=>String(v==null?'':v).replaceAll('\"','\"\"');let t='No,Larutan kerja,Konsentrasi (ppm),Replikat,λ (nm),Abs,%T,Bobot (g)\n'+rows.map(x=>[x.no,q(x.solution),x.concentration??'',x.replicate,x.lambda.toFixed(1),x.abs.toFixed(4),x.transmittance.toFixed(2),x.weight??''].join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='cary100_simple_reads_history.csv';a.click();return}if(S.tab==='conc'){const C=S.cal,q=C.std.filter(s=>s.a!=null);if(!q.length){toast('Belum ada data.');return}let t='ppm,Abs,Sumber\n'+q.map(s=>s.c+','+Number(s.a).toFixed(4)+','+(s.source||'manual')).join('\n');if(C.fit)t+='\n\nslope,'+C.fit.a+'\nintercept,'+C.fit.b+'\nr,'+C.fit.r;const o=S.out;if(o.c!=null)t+='\n\nC terukur (ppm),'+o.c+'\nC asli (ppm),'+o.cA;if(o.mgg!=null)t+='\nKadar (mg/g),'+o.mgg;if(o.rec!=null)t+='\n% Recovery,'+o.rec;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='kalibrasi_thiamin.csv';a.click();return}const r=S.res;if(!r){toast('Belum ada data.');return}let t=r.type==='scan'?'nm,Abs\n'+r.pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(4)).join('\n'):'n,nm,Abs,%T\n'+r.rows.map(x=>x.map(v=>+v.toFixed(4)).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='cary100_'+r.type+'.csv';a.click()}
 // ---------- kalibrasi thiamin, kadar, recovery
 const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
 const sdv=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1))};
@@ -903,7 +919,35 @@ function setSample(s,c){S.sample=s;if(c!=null){S.conc=c;$('conc').value=c;$('cv'
  if(s==='blank')$('smp').value='aquades';else if(s==='std'&&c!=null)$('smp').value='std_'+String(Number(c));else if(s==='spk')$('smp').value='spike';
  $('conc').disabled=s!=='std';setLiq();updateSolutionGate()}
 function readOne(sample,c,cb){const e=pre();if(e){toast(e);return false}if(!S.base){toast('Belum melakukan Zero Blank. Pilih aquades lalu tekan Zero Blank (Aquades).');return false}const l=+$('cl').value;if(!(l>=190&&l<=900)){toast('λ harus 190–900 nm.');return false}S.cal.l=l;S.spkC=+$('cAdd').value||0;setSample(sample,c);S.lam=l;startJob({type:'read',l,n:3,t:0,vals:[],cb});if(!S.camOpt){S.camOpt=1;flyV('opt')}return true}
-function measStd(i,all){if(all&&!S.batchMeasuring)return;if(all&&(S.paused||S.identifyMode)){setTimeout(()=>measStd(i,true),100);return}const s=S.cal.std[i];if(!s){S.batchMeasuring=0;S.measureVisual=0;syncX();syncProcessButtons();return}const ok=readOne('std',s.c,v=>{s.a=mean(v);s.sd=sdv(v);S.cal.fit=null;if(all&&i+1<S.cal.std.length){renderStd();setTimeout(()=>measStd(i+1,true),300)}else{S.batchMeasuring=0;S.measureVisual=0;syncX();syncProcessButtons();calc(true);toast('Pengukuran deret standar 0–25 ppm selesai.')}});if(!ok&&all){S.batchMeasuring=0;S.measureVisual=0;syncX();syncProcessButtons()}}
+function measStd(i,all){
+ if(all&&!S.batchMeasuring)return;
+ if(all&&(S.paused||S.identifyMode)){setTimeout(()=>measStd(i,true),100);return}
+ const s=S.cal.std[i];
+ if(!s){S.batchMeasuring=0;S.measureVisual=0;syncX();syncProcessButtons();return}
+ const mode=$('stdDataMode')?.value||'praktikum';
+ const preset=practicumAbsorbanceForConcentration(s.c);
+ const practicalValue=(s.a!=null && Number.isFinite(Number(s.a)))?Number(s.a):preset;
+ if(mode==='praktikum'&&!Number.isFinite(practicalValue)){
+  toast('Tidak ada nilai praktikum untuk konsentrasi '+s.c+' ppm. Isi absorbansi manual atau pilih Simulasi pembacaan alat.');
+  if(all){S.batchMeasuring=0;S.measureVisual=0;syncX();syncProcessButtons();}
+  return;
+ }
+ const ok=readOne('std',s.c,v=>{
+  if(mode==='praktikum'){
+   // Animasi pengukuran tetap berlangsung, namun nilai hasil tabel mengikuti data praktikum/angka manual.
+   s.a=(s.a!=null && Number.isFinite(Number(s.a)))?Number(s.a):preset;
+   s.sd=null;
+   if(s.source!=='manual')s.source='praktikum';
+  }else{
+   // Mode alternatif: gunakan hasil pembacaan simulasi instrumen, dengan variasi replikasi.
+   s.a=mean(v);s.sd=sdv(v);s.source='simulasi';
+  }
+  S.cal.fit=null;
+  if(all&&i+1<S.cal.std.length){renderStd();setTimeout(()=>measStd(i+1,true),300)}
+  else{S.batchMeasuring=0;S.measureVisual=0;syncX();syncProcessButtons();calc(true);toast(mode==='praktikum'?'Pengukuran selesai. Nilai kurva menggunakan data praktikum yang ditampilkan pada tabel.':'Pengukuran deret standar simulasi 0–25 ppm selesai.')}
+ });
+ if(!ok&&all){S.batchMeasuring=0;S.measureVisual=0;syncX();syncProcessButtons()}
+}
 function calc(quiet){const C=S.cal,p=C.std.filter(s=>s.a!=null&&isFinite(s.c));
  if(p.length<3){C.fit=null;if(!quiet)toast('Minimal 3 standar terisi (absorban terukur atau diketik).');renderStd();renderRes();return}
  const n=p.length,sx=p.reduce((s,q)=>s+q.c,0),sy=p.reduce((s,q)=>s+q.a,0),sxx=p.reduce((s,q)=>s+q.c*q.c,0),sxy=p.reduce((s,q)=>s+q.c*q.a,0);const den=n*sxx-sx*sx;
@@ -921,12 +965,38 @@ function calc(quiet){const C=S.cal,p=C.std.filter(s=>s.a!=null&&isFinite(s.c));
  C.fit={a,b,r2,r,n,syx,lod:3.3*syx/a,loq:10*syx/a};renderStd();renderRes()}
 function measUnk(){if(!S.cal.fit){toast('Hitung kurva kalibrasi dulu.');return}readOne('unk',null,v=>{const avg=mean(v);S.lastSampleRead={key:S.solutionKey||'unk',solution:'Sampel tidak diketahui',absorbance:avg,replicates:v.length,concentration:null,weight:null,prepVolumeMl:null,prepDilutionFactor:null,lambda:S.cal.l};setAbsorbanceValue('aU',avg,'Absorbansi terisi otomatis dari pembacaan sampel (rata-rata '+v.length+' replikasi). Nilai tetap bisa diedit manual.');renderRes()})}
 function measSpk(){if(!S.cal.fit){toast('Hitung kurva kalibrasi dulu.');return}if(!(+$('cAdd').value>0)){toast('Isi konsentrasi spike yang ditambahkan.');return}readOne('spk',null,v=>{const avg=mean(v);S.lastSampleRead={key:'spike',solution:'Sampel + spike',absorbance:avg,replicates:v.length,concentration:null,weight:null,prepVolumeMl:null,prepDilutionFactor:null,lambda:S.cal.l};setAbsorbanceValue('aSp',avg,'Absorbansi sampel + spike terisi otomatis dari '+v.length+' replikasi. Nilai tetap bisa diedit manual.');renderRes()})}
-function renderStd(){const C=S.cal;let t='<table><tr><th>No</th><th>Konsentrasi (ppm)</th><th>Absorban (ukur / ketik)</th><th></th></tr>';
- C.std.forEach((s,i)=>t+=`<tr><td>${i+1}</td><td><input data-i="${i}" data-k="c" type="number" step="0.5" min="0" value="${s.c}"></td><td><input data-i="${i}" data-k="a" type="number" step="0.001" min="0" placeholder="–" value="${s.a==null?'':s.a.toFixed(4)}" title="${s.sd?'SD n=3: '+s.sd.toFixed(4):''}"></td><td style="text-align:center"><button data-m="${i}">Ukur</button> <button data-d="${i}" title="Hapus baris">✕</button></td></tr>`);
+function renderStd(){
+ const C=S.cal;
+ let t='<table><tr><th>No</th><th>Konsentrasi (ppm)</th><th>Absorban (ukur / ketik)</th><th>Sumber</th><th></th></tr>';
+ C.std.forEach((s,i)=>{
+  const sourceLabel=s.source==='simulasi'?'Simulasi':s.source==='manual'?'Manual':s.a==null?'Kosong':'Praktikum';
+  t+=`<tr><td>${i+1}</td><td><input data-i="${i}" data-k="c" type="number" step="0.5" min="0" value="${s.c}"></td><td><input data-i="${i}" data-k="a" type="number" step="0.001" min="0" placeholder="–" value="${s.a==null?'':Number(s.a).toFixed(4)}" title="${s.sd!=null?'SD n=3: '+s.sd.toFixed(4):''}"></td><td>${sourceLabel}</td><td style="text-align:center"><button data-m="${i}">Ukur</button> <button data-d="${i}" title="Hapus nilai baris">✕</button></td></tr>`;
+ });
  $('stdtab').innerHTML=t+'</table>';
- $('stdtab').querySelectorAll('input').forEach(e=>e.onchange=()=>{const s=C.std[+e.dataset.i];if(e.dataset.k==='c'){s.c=+e.value;s.a=null;s.sd=null}else{const v=parseFloat(e.value);s.a=isFinite(v)?v:null;s.sd=null}C.fit=null;calc(true)});
+ $('stdtab').querySelectorAll('input').forEach(e=>e.onchange=()=>{
+  const s=C.std[+e.dataset.i];
+  if(e.dataset.k==='c'){
+   s.c=+e.value;s.sd=null;
+   if(s.source==='praktikum'){
+    const preset=practicumAbsorbanceForConcentration(s.c);
+    s.a=preset;s.source=preset==null?'manual':'praktikum';
+   }
+  }else{
+   const v=parseFloat(e.value);s.a=Number.isFinite(v)?v:null;s.sd=null;s.source=Number.isFinite(v)?'manual':'manual';
+  }
+  C.fit=null;calc(true);
+ });
  $('stdtab').querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>measStd(+b.dataset.m,false));
- $('stdtab').querySelectorAll('button[data-d]').forEach(b=>b.onclick=()=>{C.std.splice(+b.dataset.d,1);C.fit=null;calc(true)})}
+ $('stdtab').querySelectorAll('button[data-d]').forEach(b=>b.onclick=()=>{const s=C.std[+b.dataset.d];if(s){s.a=null;s.sd=null;s.source='manual'}C.fit=null;renderStd();renderRes()});
+ const mode=$('stdDataMode');
+ if(mode){
+  mode.disabled=!!(S.job||S.batchMeasuring);
+  const hint=$('stdDataModeHint');
+  if(hint)hint.textContent=mode.value==='praktikum'
+   ?'Mode data praktikum aktif: tombol Ukur akan memakai nilai absorbansi di tabel (termasuk hasil edit manual). Animasi alat tetap berjalan. Pilih Simulasi pembacaan alat untuk mengganti nilai dengan hasil simulasi.'
+   :'Mode simulasi aktif: saat tombol Ukur digunakan, nilai pada baris akan diganti dengan hasil pembacaan simulasi. Kamu tetap bisa mengedit nilainya secara manual setelah pengukuran.';
+ }
+}
 function renderRes(){
  const C=S.cal,f=C.fit,key=S.solutionKey||'';let r='';C.unk=null;C.spk=null;S.out={};
  if(f)r+=`<div class="calc-formula"><b>Persamaan kalibrasi:</b> A = ${fmtID(f.a,5)} × C ${f.b<0?'−':'+'} ${fmtID(Math.abs(f.b),5)}<br><b>r (koefisien korelasi)</b> = ${fmtID(f.r,5)} ${f.r>=.995?'✔ korelasi linear sangat kuat':'⚠ periksa data standar dan rentang kurva'}<br>LOD ≈ ${fmtID(f.lod,3)} ppm · LOQ ≈ ${fmtID(f.loq,3)} ppm</div>`;
@@ -1075,7 +1145,8 @@ $('bB').onclick=()=>S.beam=S.beam?0:1;
 S.autoRotateWanted=false;$('bR').onclick=e=>{S.autoRotateWanted=!S.autoRotateWanted;ctl.autoRotate=S.autoRotateWanted&&!S.paused;e.target.classList.toggle('on',S.autoRotateWanted)};$('bA').onclick=()=>{if(S.app&&S.appMinimized){S.appMinimized=0;$('app').hidden=false;drawScreen();renderUI();toast('Cary WinUV dibuka kembali.')}else openApp(true)};$('minApp').onclick=minimizeApp;$('xapp').onclick=()=>openApp(false);
 $('bFS').onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>toast('Layar penuh diblokir browser.'))};$('bRe').onclick=()=>location.reload();
 $('aBase').onclick=startBase;$('aStart').onclick=start;$('aStop').onclick=()=>{S.batchMeasuring=0;S.measureVisual=0;S.paused=0;finishJob();toast('Proses dihentikan.');};$('aCsv').onclick=csv;$('cAll').onclick=()=>{if(S.job||S.batchMeasuring){toast('Pengukuran sedang berjalan.');return}if(!S.base){toast('Lakukan Zero Blank aquades terlebih dahulu.');return}enterAnimationFocus();S.batchMeasuring=1;S.measureVisual=1;syncProcessButtons();syncAnimationFocusHUD();measStd(0,true)};$('cFit').onclick=()=>calc(false);$('cUnk').onclick=measUnk;$('cSpk').onclick=measSpk;
-$('cClr').onclick=()=>{S.cal.std.forEach(s=>{s.a=null;s.sd=null});S.cal.fit=null;$('aU').value='';$('aSp').value='';renderConc()};
+$('stdDataMode').onchange=()=>{renderStd();toast($('stdDataMode').value==='praktikum'?'Mode data praktikum: pengukuran standar akan mencatat nilai pada tabel.':'Mode simulasi: pengukuran standar akan memakai hasil simulasi instrumen.');};
+$('cClr').onclick=()=>{S.cal.std.forEach(s=>{s.a=null;s.sd=null;s.source='manual'});S.cal.fit=null;$('aU').value='';$('aSp').value='';renderConc();toast('Nilai kalibrasi dikosongkan. Mode data praktikum dapat mengisi kembali nilai standar saat tombol Ukur ditekan; input manual tetap tersedia.')};
 $('cAddStd').onclick=()=>{const C=S.cal,last=C.std.length?C.std[C.std.length-1].c:0;C.std.push({c:last+5,a:null,sd:null});C.fit=null;calc(true)};
 const useL=()=>{if(S.lmax){const v=Math.round(S.lmax.l*10)/10;$('cl').value=v;$('sl').value=v;S.cal.l=v;toast('λ analisis = '+v+' nm (dari λmax scan).');drawCal()}else toast('Lakukan Scan dulu untuk mendapatkan λmax.')};
 $('bUseL').onclick=useL;$('cUseL').onclick=useL;$('cl').onchange=()=>{S.cal.l=+$('cl').value;drawCal()};
