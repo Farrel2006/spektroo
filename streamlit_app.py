@@ -1,4 +1,4 @@
-""Digital Twin Spektrofotometer UV-Vis (Agilent Cary 100) - Analisis Thiamin
+"""Digital Twin Spektrofotometer UV-Vis (Agilent Cary 100) - Analisis Thiamin
 SATU FILE SAJA: seluruh model 3D (Three.js) sudah tertanam di dalam file ini.
 Jalankan: streamlit run app.py
 """
@@ -1428,4 +1428,4 @@ loop();
 
 """
 
-components.html(HTML, height=height, scrolling=
+components.html(HTML, height=height, scrolling=False
