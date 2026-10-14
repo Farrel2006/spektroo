@@ -1428,4 +1428,8 @@ loop();
 
 """
 
-components.html(HTML, height=height, scrolling=False
+components.html(
+    HTML,
+    height=height,
+    scrolling=False,
+)
